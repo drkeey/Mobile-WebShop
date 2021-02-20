@@ -1,0 +1,11 @@
+• Web košaricu
+• Pretraživanje stranice/korisnika/proizvoda
+• Implementirati višestruke filtere (min. 3 uvjeta istovremeno)
+• Upload slike, pdf
+• Vremenska prognoza, svjetsko vrijeme (na vlastitom projektu prikazati podatke od
+ vanjskog servisa)
+• Ispis – prilagoditi dio stranice za print
+• Upravljanje korisnicima (urediti, obrisati, dodati, promijeniti ulogu)
+• Korištenje AJAX2 -a (primjer - https://www.w3schools.com/js/js_ajax_intro.asp) +
+• Korištenje JavaScript programskih okvira kao što je Vue.js, React.js, AngularJS +
+• Korištenje GIT-a za suradnju 
