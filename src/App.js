@@ -4,7 +4,8 @@ import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link
+  Link,
+  Redirect
 } from "react-router-dom";
 import logo from './logo.svg';
 import './App.css';
@@ -18,6 +19,8 @@ import FormControl from 'react-bootstrap/FormControl';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import InputGroup from 'react-bootstrap/InputGroup';
+import Spinner from 'react-bootstrap/Spinner';
+
 import { Container } from "react-bootstrap";
 
 import { FaCartPlus } from "react-icons/fa";
@@ -174,18 +177,16 @@ function Navigation() {
       <Navbar.Collapse id="basic-navbar-nav">
         <Nav className="mr-auto">
           <Nav.Link href="/uredaji">Uređaji</Nav.Link>
-          <Nav.Link href="#link">Usluge</Nav.Link>
           <NavDropdown title="Profil" id="basic-nav-dropdown">
             <NavDropdown.Item href="/prijava">Prijava</NavDropdown.Item>
             <NavDropdown.Item href="/registracija">Registracija</NavDropdown.Item>
-            <NavDropdown.Divider />
-            <NavDropdown.Item href="/resetLozinke">Zaboravljena lozinka</NavDropdown.Item>
+            {/* <NavDropdown.Divider /> */}
+            {/* <NavDropdown.Item href="/resetLozinke">Zaboravljena lozinka</NavDropdown.Item> */}
           </NavDropdown>
           <Kosarica />
         </Nav>
         <Form inline>
-          <FormControl type="text" placeholder="Naziv uređaja" className="mr-sm-2" />
-          <Button variant="outline-dark">Traži</Button>
+
         </Form>
       </Navbar.Collapse>
     </Navbar>
@@ -548,30 +549,87 @@ function Pocetna() {
 }
 
 function Prijava() {
+  const [loading, setLoading] = React.useState(false)
+  const [loginResponse, setLoginResponse] = React.useState()
+
+  const [podaci, setPodaci] = React.useState({
+    korisnicko_ime: '',
+    lozinka: ''
+  })
+
+  const submitHandler = event => {
+    event.preventDefault();
+    event.target.className += " was-validated";
+
+    setLoading(true)
+    console.log(podaci, event.target)
+    //Prijava
+    let xmlhttp = new XMLHttpRequest()
+    xmlhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        console.log(this.responseText);
+        setLoginResponse('Uspješna prijava.')
+        setLoading(false)
+      }
+      switch (this.status) {
+        case 404:
+          setLoginResponse('Neuspješna prijava.')
+          setLoading(false)
+          break;
+      }
+    };
+    xmlhttp.open("POST", "http://localhost:4000/prijava", true);
+    xmlhttp.setRequestHeader('Content-type', 'application/json')
+    console.log(podaci)
+    xmlhttp.send(
+      JSON.stringify(
+        podaci
+      )
+    );
+  };
+
+  const changeHandler = event => {
+    setPodaci(Object.assign(podaci, { [event.target.name]: event.target.value }));
+
+    console.log(event.target.name, event.target.value, '     ', podaci)
+  };
+
   return (
     <Container fluid>
       <h1 style={{ textAlign: 'center' }}>Prijava</h1>
       <div style={{ margin: 'auto', width: '30%', textAlign: 'center' }}>
-        <InputGroup className="mb-3">
-          <InputGroup.Prepend>
-            <InputGroup.Text id="basic-addon1">Korisničko ime</InputGroup.Text>
-          </InputGroup.Prepend>
-          <FormControl
-            aria-label="Username"
-            aria-describedby="basic-addon1"
-          />
-        </InputGroup>
-        <InputGroup className="mb-3">
-          <InputGroup.Prepend>
-            <InputGroup.Text id="basic-addon1">Lozinka</InputGroup.Text>
-          </InputGroup.Prepend>
-          <FormControl
-            aria-label="Username"
-            aria-describedby="basic-addon1"
-          />
-        </InputGroup>
-        <Button variant="outline-dark">Prijava</Button> <br />
-        <Button style={{ marginTop: '5px' }} variant="outline-dark">Registracija</Button>
+        <Form onSubmit={submitHandler}>
+          <Form.Group controlId="prijava.korisnicko_ime">
+            <Form.Label>Korisničko ime</Form.Label>
+            <InputGroup className="mb-3">
+              <FormControl
+                name="korisnicko_ime"
+                type="text"
+                required
+                onChange={changeHandler}
+                maxLength="20"
+              />
+            </InputGroup>
+          </Form.Group>
+          <Form.Group controlId="prijava.lozinka">
+            <Form.Label>Lozinka</Form.Label>
+            <InputGroup className="mb-3">
+              <FormControl
+                name="lozinka"
+                type="password"
+                required
+                onChange={changeHandler}
+                maxLength="25"
+              />
+            </InputGroup>
+          </Form.Group>
+          <Button type="submit" variant="outline-dark">Prijava</Button> <br />
+          <br />
+          {loading ? <Spinner style={{ marginTop: '5px' }} animation="border" role="status">
+            <span className="sr-only">Loading...</span>
+          </Spinner> : null}
+          <a>{loginResponse}</a>
+        </Form>
       </div>
 
     </Container>
@@ -579,51 +637,107 @@ function Prijava() {
 }
 
 function Registracija() {
+  const [registerResponse, setRegisterResponse] = React.useState()
+
+  const [loading, setLoading] = React.useState(false)
+  const [podaci, setPodaci] = React.useState({
+    korisnicko_ime: '',
+    lozinka: '',
+    email: ''
+  })
+
+  const submitHandler = event => {
+    event.preventDefault();
+    event.target.className += " was-validated";
+
+    setLoading(true)
+    console.log(podaci, event.target)
+    //Registracija
+    let xmlhttp = new XMLHttpRequest()
+    xmlhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        console.log(this.responseText);
+        setLoading(false)
+        return setRegisterResponse(this.responseText)
+      }
+      setRegisterResponse(this.responseText)
+      setLoading(false)
+    };
+    xmlhttp.open("POST", "http://localhost:4000/registracija", true);
+    xmlhttp.setRequestHeader('Content-type', 'application/json')
+    console.log(podaci)
+    xmlhttp.send(
+      JSON.stringify(
+        podaci
+      )
+    );
+  };
+
+  const changeHandler = event => {
+    setPodaci(Object.assign(podaci, { [event.target.name]: event.target.value }));
+    console.log(event.target.name, event.target.value, '     ', podaci)
+  };
+
   return (
     <Container fluid>
       <h1 style={{ textAlign: 'center' }}>Registracija</h1>
       <div style={{ margin: 'auto', width: '30%', textAlign: 'center' }}>
-        <InputGroup className="mb-3">
-          <InputGroup.Prepend>
-            <InputGroup.Text id="basic-addon1">Korisničko ime</InputGroup.Text>
-          </InputGroup.Prepend>
-          <FormControl
-            aria-label="Username"
-            aria-describedby="basic-addon1"
-          />
-        </InputGroup>
-
-        <InputGroup className="mb-3">
-          <InputGroup.Prepend>
-            <InputGroup.Text id="basic-addon1">Lozinka</InputGroup.Text>
-          </InputGroup.Prepend>
-          <FormControl
-            aria-label="Username"
-            aria-describedby="basic-addon1"
-          />
-        </InputGroup>
-
-        <InputGroup className="mb-3">
-          <InputGroup.Prepend>
-            <InputGroup.Text id="basic-addon1">Potvrdi lozinku</InputGroup.Text>
-          </InputGroup.Prepend>
-          <FormControl
-            aria-label="Username"
-            aria-describedby="basic-addon1"
-          />
-        </InputGroup>
-
-        <InputGroup className="mb-3">
-          <InputGroup.Prepend>
-            <InputGroup.Text id="basic-addon1">Email</InputGroup.Text>
-          </InputGroup.Prepend>
-          <FormControl
-            aria-label="Username"
-            aria-describedby="basic-addon1"
-          />
-        </InputGroup>
-
-        <Button style={{ marginTop: '5px' }} variant="outline-dark">Registracija</Button>
+        <Form onSubmit={submitHandler}>
+          <Form.Group controlId="registracija.korisnicko_ime">
+            <Form.Label>Korisničko ime</Form.Label>
+            <InputGroup className="mb-3">
+              <FormControl
+                name="korisnicko_ime"
+                type="text"
+                required
+                onChange={changeHandler}
+                maxLength="20"
+              />
+            </InputGroup>
+          </Form.Group>
+          <Form.Group controlId="registracija.lozinka">
+            <Form.Label>Lozinka</Form.Label>
+            <InputGroup className="mb-3">
+              <FormControl
+                name="lozinka"
+                type="password"
+                required
+                onChange={changeHandler}
+                maxLength="25"
+              />
+            </InputGroup>
+          </Form.Group>
+          <Form.Group controlId="registracija.potvrdaLozinke">
+            <Form.Label>Potvrdi lozinku</Form.Label>
+            <InputGroup className="mb-3">
+              <FormControl
+                name="PasswordConfirm"
+                type="password"
+                required
+                onChange={changeHandler}
+                maxLength="25"
+              />
+            </InputGroup>
+          </Form.Group>
+          <Form.Group controlId="registracija.email">
+            <Form.Label>Email</Form.Label>
+            <InputGroup className="mb-3">
+              <FormControl
+                name="email"
+                type="email"
+                required
+                onChange={changeHandler}
+                maxLength="50"
+              />
+            </InputGroup>
+          </Form.Group>
+          <Button type="submit" style={{ marginTop: '5px' }} variant="outline-dark">Registracija</Button>
+          <br />
+          {loading ? <Spinner style={{ marginTop: '5px' }} animation="border" role="status">
+            <span className="sr-only">Loading...</span>
+          </Spinner> : null}
+          <a>{registerResponse}</a>
+        </Form>
       </div>
 
     </Container>
