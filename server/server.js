@@ -2,15 +2,23 @@ const mysql = require('mysql');
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const squel = require('squel')
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
+
 const express = require('express')
 const app = express()
 const port = 4000
+
+
 
 //Middleware
 var corsOptions = {
     origin: 'http://localhost:3000',
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
+
+app.use(cookieParser());
+app.use(session({ secret: 'Embiteli123' }));
 app.use(cors(corsOptions))
 app.use(bodyParser.json())
 app.use(express.urlencoded())
@@ -141,7 +149,7 @@ app.post('/registracija', (req, res) => {
 
         con.query(q.toString(), function (err, result, fields) {
             if (err) throw err;
-            console.log(result)
+            //console.log(result)
             console.log('Korisnik uspjesno dodan u bazu podataka')
             res.send('Registracija uspješna!')
         });
@@ -149,16 +157,53 @@ app.post('/registracija', (req, res) => {
     Provjera()
 })
 
+// app.post('/prijava', (req, res) => {
+//     if (!connected) return res.sendStatus(500)
+//     console.log('Primam prijavu', req.body)
+//     let q = squel.select().from("korisnici").where(`korisnicko_ime="${req.body.korisnicko_ime}"`).where(`lozinka="${req.body.lozinka}"`)
+//     con.query(q.toString(), function (err, result, fields) {
+//         if (err) throw err;
+//         if (result.length > 0) return res.sendStatus(200)
+//         res.sendStatus(404)
+//     });
+// })
+//Auth
 app.post('/prijava', (req, res) => {
     if (!connected) return res.sendStatus(500)
+
+    if(req.session.user){
+        console.log('Haloo')
+        res.send("Već ste prijavljeni.");
+    }
+
+    //za svaki slucaj
+    if (!req.body.korisnicko_ime || !req.body.lozinka) {
+        res.status("400");
+        res.send("Molimo popunite sve podatke.");
+    }
+
+    
+    console.log(req.session)
+
+
     console.log('Primam prijavu', req.body)
     let q = squel.select().from("korisnici").where(`korisnicko_ime="${req.body.korisnicko_ime}"`).where(`lozinka="${req.body.lozinka}"`)
     con.query(q.toString(), function (err, result, fields) {
         if (err) throw err;
-        if (result.length > 0) return res.sendStatus(200)
+        if (result.length > 0) {
+            req.session.user = {
+                korisnicko_ime: req.body.korisnicko_ime,
+                lozinka: req.body.lozinka
+            }
+            console.log('Gotovo', req.session)
+            return res.send('Prijava uspješna!')
+        }
         res.sendStatus(404)
+
     });
 })
+
+
 
 
 
