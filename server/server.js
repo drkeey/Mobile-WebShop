@@ -4,6 +4,9 @@ const bodyParser = require('body-parser')
 const squel = require('squel')
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
+const sessions = require("client-sessions");
+const jwt = require('jsonwebtoken');
+
 
 const express = require('express')
 const app = express()
@@ -17,11 +20,11 @@ var corsOptions = {
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
 
-app.use(cookieParser());
-app.use(session({ secret: 'Embiteli123' }));
 app.use(cors(corsOptions))
+app.use(cookieParser());
+//app.use(session({ secret: 'Emobiteli123', saveUninitialized: true, resave: true, cookie: { secure: true } }));
 app.use(bodyParser.json())
-app.use(express.urlencoded())
+app.use(bodyParser.urlencoded({ extended: true }));
 
 //Povezivanje sa bazom podataka
 let connected = false
@@ -57,7 +60,43 @@ let db_reconnect_interval = setInterval(function () {
     clearInterval(db_reconnect_interval)
 }, 2000)
 
+function authMiddleware(req, res, next) {
+    console.log('hasiram')
+    if (!req.headers.authorization) return res.send('Potrebna autorizacija za pregled')
+    const token = req.headers.authorization.replace('Bearer ', '')
 
+    try {
+        var decoded = jwt.verify(token, '123');
+        console.log(decoded)
+        let q = squel.select().from("korisnici").where(`korisnicko_ime="${decoded.username}"`).where(`lozinka="${decoded.password}"`)
+        con.query(q.toString(), function (err, result, fields) {
+            if (err) throw err;
+            if (result.length > 0) {
+                console.log('Imaga')
+                req.loggedIn = true
+                return next()
+            } else {
+                console.log('Nemaga')
+                req.loggedIn = false
+                return next()
+            }
+
+        });
+    } catch (err) {
+        // err
+    }
+}
+//app.use(authMiddleware)
+app.get('/pocetna', authMiddleware, (req, res) => {
+    //console.log(req.headers)
+    
+})
+
+app.get('/checkLogin', authMiddleware, (req, res) => {
+    //console.log(req.headers)
+    if (req.loggedIn) res.sendStatus(201)
+    else res.sendStatus(202)
+})
 
 
 //Rute za proizvode
@@ -106,8 +145,9 @@ app.post('/uredaji/filter', (req, res) => {
 
 })
 
-//Rute za korisnike
 
+
+//Rute za korisnike
 app.post('/registracija', (req, res) => {
     if (!connected) return res.sendStatus(500)
 
@@ -157,24 +197,14 @@ app.post('/registracija', (req, res) => {
     Provjera()
 })
 
-// app.post('/prijava', (req, res) => {
-//     if (!connected) return res.sendStatus(500)
-//     console.log('Primam prijavu', req.body)
-//     let q = squel.select().from("korisnici").where(`korisnicko_ime="${req.body.korisnicko_ime}"`).where(`lozinka="${req.body.lozinka}"`)
-//     con.query(q.toString(), function (err, result, fields) {
-//         if (err) throw err;
-//         if (result.length > 0) return res.sendStatus(200)
-//         res.sendStatus(404)
-//     });
-// })
-//Auth
 app.post('/prijava', (req, res) => {
     if (!connected) return res.sendStatus(500)
 
-    if(req.session.user){
-        console.log('Haloo')
-        res.send("Već ste prijavljeni.");
-    }
+    //console.log('-------------------------------', req.session.loggedin)
+    // if (req.session.loggedin) {
+    //     console.log('dobrodosao')
+    // 	res.send('Welcome back, ' + req.session.username + '!');
+    // }
 
     //za svaki slucaj
     if (!req.body.korisnicko_ime || !req.body.lozinka) {
@@ -182,7 +212,7 @@ app.post('/prijava', (req, res) => {
         res.send("Molimo popunite sve podatke.");
     }
 
-    
+
     console.log(req.session)
 
 
@@ -191,16 +221,39 @@ app.post('/prijava', (req, res) => {
     con.query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         if (result.length > 0) {
-            req.session.user = {
-                korisnicko_ime: req.body.korisnicko_ime,
-                lozinka: req.body.lozinka
-            }
-            console.log('Gotovo', req.session)
-            return res.send('Prijava uspješna!')
+            const token = jwt.sign({ username: req.body.korisnicko_ime, password: req.body.lozinka }, '123', { expiresIn: '10h' });
+            console.log('asdasdsdasad', token)
+            return res.json(token)
+            // jwt.sign({ username: req.body.korisnicko_ime, password: req.body.lozinka }, '123', { algorithm: 'RS256' }, function(err, token) {
+            //     if(err) console.log(err)
+            //     console.log(token);
+            //   });
+
+            // req.session.user = {
+            //     korisnicko_ime: req.body.korisnicko_ime,
+            //     lozinka: req.body.lozinka
+            // }
+            // console.log('Gotovo', req.session)
+            // return res.send('Prijava uspješna!')
         }
         res.sendStatus(404)
 
     });
+})
+
+app.get('/profil', (req,res) => {
+
+})
+
+
+
+
+//Kosarica
+app.get('/kosarica', (req,res) => {
+
+})
+app.post('/kosarica', (req,res) => {
+
 })
 
 

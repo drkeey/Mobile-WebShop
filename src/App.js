@@ -25,9 +25,46 @@ import { Container } from "react-bootstrap";
 
 import { FaCartPlus } from "react-icons/fa";
 
+import Cookies from 'js-cookie'
+import { resolve } from "path";
+
 //require('dotenv').config()
 const url = require('url');
 
+
+
+//Provjera sesije
+const isLoggedIn = () => {
+  return new Promise(resolve => {
+    let final = null
+    let xmlhttp = new XMLHttpRequest()
+    xmlhttp.onreadystatechange = function () {
+      if (this.readyState == 4) {
+        switch (this.status) {
+          case 201: //Logiran
+            console.log('pkl')
+            final = true
+            break;
+          case 202: //Nije logiran
+            console.log('pk22l')
+            final = false
+            break;
+        }
+      }
+    };
+    setInterval(() => {
+      if (final !== null) return resolve(final)
+    }, 100)
+
+    xmlhttp.open("GET", "http://localhost:4000/checkLogin", true);
+    xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+    xmlhttp.send();
+  })
+
+
+
+
+}
 
 let kosaricaArr = []
 let mobiteli = [
@@ -126,7 +163,20 @@ let mobiteli = [
 
 function Navigation() {
 
+  const [loggedIn, setLoggedIn] = React.useState(Cookies.get('loggedIn'))
 
+
+  useEffect(async () => {
+    let logged = await isLoggedIn()
+    setLoggedIn(logged)
+  }, []);
+
+  function handleLogOut() {
+    Cookies.set('token', '')
+    Cookies.set('loggedIn', false)
+    setLoggedIn(false)
+    console.log()
+  }
 
   function Kosarica() {
     const [korpa, setKorpa] = React.useState([])
@@ -178,8 +228,19 @@ function Navigation() {
         <Nav className="mr-auto">
           <Nav.Link href="/uredaji">Uređaji</Nav.Link>
           <NavDropdown title="Profil" id="basic-nav-dropdown">
-            <NavDropdown.Item href="/prijava">Prijava</NavDropdown.Item>
-            <NavDropdown.Item href="/registracija">Registracija</NavDropdown.Item>
+            {loggedIn === true ?
+              <div>
+                <NavDropdown.Item href="/profil">Pregled profila</NavDropdown.Item>
+                <NavDropdown.Item onClick={() => { handleLogOut() }} href="/">Odjava</NavDropdown.Item>
+              </div>
+              :
+              <div>
+                <NavDropdown.Item href="/prijava">Prijava</NavDropdown.Item>
+                <NavDropdown.Item href="/registracija">Registracija</NavDropdown.Item>
+              </div>
+
+            }
+
             {/* <NavDropdown.Divider /> */}
             {/* <NavDropdown.Item href="/resetLozinke">Zaboravljena lozinka</NavDropdown.Item> */}
           </NavDropdown>
@@ -237,12 +298,14 @@ export default function App() {
 
 
 
+
+
 function Uredaji() {
   const [filter, setFilteri] = React.useState([])
   const [uredaji, setUredaji] = React.useState([])
 
   function addToCart(item) {
-
+       
   }
 
   //Get dostupne uredaje
@@ -534,6 +597,13 @@ function Narudzba() {
 }
 
 function Pocetna() {
+  const [loggedIn, setLoggedIn] = React.useState()
+
+  useEffect(async () => {
+    let logged = await isLoggedIn()
+    setLoggedIn(logged)
+  }, []);
+
   return (
     <div className="pocetna-stranica">
       <div className="hero-image">
@@ -574,6 +644,9 @@ function Prijava() {
         console.log(this.responseText);
         setLoginResponse(this.responseText)
         setLoading(false)
+        let token = this.responseText.replaceAll(`"`, '')
+        Cookies.set('token', token)
+
       }
       switch (this.status) {
         case 404:
