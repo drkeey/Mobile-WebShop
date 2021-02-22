@@ -74,6 +74,7 @@ function authMiddleware(req, res, next) {
             if (result.length > 0) {
                 console.log('Imaga')
                 req.loggedIn = true
+                req.user = result[0]
                 return next()
             } else {
                 console.log('Nemaga')
@@ -89,7 +90,7 @@ function authMiddleware(req, res, next) {
 //app.use(authMiddleware)
 app.get('/pocetna', authMiddleware, (req, res) => {
     //console.log(req.headers)
-    
+
 })
 
 app.get('/checkLogin', authMiddleware, (req, res) => {
@@ -200,59 +201,113 @@ app.post('/registracija', (req, res) => {
 app.post('/prijava', (req, res) => {
     if (!connected) return res.sendStatus(500)
 
-    //console.log('-------------------------------', req.session.loggedin)
-    // if (req.session.loggedin) {
-    //     console.log('dobrodosao')
-    // 	res.send('Welcome back, ' + req.session.username + '!');
-    // }
-
     //za svaki slucaj
     if (!req.body.korisnicko_ime || !req.body.lozinka) {
         res.status("400");
         res.send("Molimo popunite sve podatke.");
     }
 
-
-    console.log(req.session)
-
-
     console.log('Primam prijavu', req.body)
     let q = squel.select().from("korisnici").where(`korisnicko_ime="${req.body.korisnicko_ime}"`).where(`lozinka="${req.body.lozinka}"`)
     con.query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         if (result.length > 0) {
-            const token = jwt.sign({ username: req.body.korisnicko_ime, password: req.body.lozinka }, '123', { expiresIn: '10h' });
+            console.log('asdasdsdasad', result)
+            const token = jwt.sign({ username: req.body.korisnicko_ime, password: req.body.lozinka, tip: result[0].tip }, '123', { expiresIn: '10h' });
             console.log('asdasdsdasad', token)
             return res.json(token)
-            // jwt.sign({ username: req.body.korisnicko_ime, password: req.body.lozinka }, '123', { algorithm: 'RS256' }, function(err, token) {
-            //     if(err) console.log(err)
-            //     console.log(token);
-            //   });
-
-            // req.session.user = {
-            //     korisnicko_ime: req.body.korisnicko_ime,
-            //     lozinka: req.body.lozinka
-            // }
-            // console.log('Gotovo', req.session)
-            // return res.send('Prijava uspješna!')
         }
         res.sendStatus(404)
 
     });
 })
 
-app.get('/profil', (req,res) => {
+app.get('/profil', authMiddleware, (req, res) => {
+    if (!connected) return res.sendStatus(500)
+    if (!req.loggedIn) return res.sendStatus(403)
+
+    res.status(200)
+    res.send(req.user)
 
 })
 
+app.post('/updateProfile', authMiddleware, (req, res) => {
+    if (!connected) return res.sendStatus(500)
+
+    console.log(req.body)
+
+    let q = squel.update()
+        .table("korisnici")
+        .set(`adresa="${req.body.adresa}"`)
+        .set(`postanski_broj="${req.body.postanski_broj}"`)
+        .set(`opcina="${req.body.opcina}"`)
+        .where(`lozinka="${req.user.lozinka}"`)
+        .toString()
+
+    con.query(q.toString(), function (err, result, fields) {
+        if (err) throw err;
+        console.log(result)
+        res.sendStatus(200)
+    });
+})
 
 
+//Admin
+app.get('/upravljanjeKorisnicima', authMiddleware, (req, res) => {
+    const dopusteni_tipovi = [0, 1] //Tipovi koji smiju upravljati ovom rutom
+
+    if (!connected) return res.sendStatus(500)
+
+    let dopusten = dopusteni_tipovi.some(elem => elem === req.user.tip)
+    if (!dopusten) return res.sendStatus(403)
+
+    let q = squel.select().from("korisnici")
+    con.query(q.toString(), function (err, result, fields) {
+        if (err) throw err;
+        if (result.length > 0) {
+            //console.log('asdasdsdasad', result)
+            return res.json(result)
+        }
+        res.sendStatus(404)
+
+    });
+
+})
+
+app.post('/uredi', (req, res) => {
+    if (!connected) return res.sendStatus(500)
+    console.log(req.body)
+    const odabrani = req.body
+
+    switch(req.user.tip){
+        case 0:
+            break;
+        case 1:
+            //Zastita admin acca
+            if(odabrani.tip === 0) return res.sendStatus(403)
+            break;
+    }
+
+    let q = squel.update()
+        .table("korisnici")
+        .set(`adresa="${req.body.adresa}"`)
+        .set(`postanski_broj="${req.body.postanski_broj}"`)
+        .set(`opcina="${req.body.opcina}"`)
+        .where(`lozinka="${req.user.lozinka}"`)
+        .toString()
+
+    con.query(q.toString(), function (err, result, fields) {
+        if (err) throw err;
+        console.log(result)
+        res.sendStatus(200)
+    });
+})
 
 //Kosarica
-app.get('/kosarica', (req,res) => {
+app.get('/kosarica', (req, res) => {
 
 })
-app.post('/kosarica', (req,res) => {
+app.post('/kosarica', (req, res) => {
 
 })
 
