@@ -70,98 +70,6 @@ const isLoggedIn = () => {
 }
 
 let kosaricaArr = []
-let mobiteli = [
-  {
-    id: 0,
-    naziv: 'Xiaomi Redmi Note 9T',
-    proizvodac: 'Xiaomi',
-    cijena: 2100,
-    kratkiOpis: 'Pogonski stroj je MediaTek Dimensity 800U (7nm) koji podržava 5G. Po pitanju memorije, predstavljene su varijante s 4GB radne memorije (LPDDR4X) te 64GB (UFS 2.1) ili 128GB (UFS 2.2) interne memorije. Baterija je kapaciteta 5000mAh uz 18W brzo žično punjenje, dok se prema službenim stranicama uz uređaj isporučuje jači 22,5W punjač. Uređaj ima NFC, a senzor otiska prsta ugrađen je na boku uređaja.',
-    slikaUrl: 'https://www.centar-tehnike.hr/upload/2021/01/phone-5g_60095f8add644.png',
-    godina: 2021,
-    popularnost: 32
-  },
-  {
-    id: 1,
-    naziv: 'Samsung Galaxy F41',
-    proizvodac: 'Samsung',
-    cijena: 4200,
-    kratkiOpis: 'Samsung Galaxy F41 Opremljen je 6,4-inčnim  Super AMOLED  Infinity-U zaslonom razlučivosti 1080 x 2340 piksela pri gustoći piksela od 403 piksela po kvadratnom inču (ppi) i omjeru stranica 19,5: 9.   Unutar ureza na vrhu kapljice vode nalazi se 32 MP  prednja kamera s optikom f / 2.0.',
-    slikaUrl: 'https://fdn2.gsmarena.com/vv/pics/samsung/samsung-galaxy-f41-sm-f415fds-1.jpg',
-    godina: 2020,
-    popularnost: 57
-  },
-  {
-    id: 2,
-    naziv: 'Xiaomi Redmi Note 8',
-    proizvodac: 'Xiaomi',
-    cijena: 1800,
-    kratkiOpis: 'Redmi Note 7 je postao prvi Redmi smartfon sa staklenim stražnjim panelom, gradacijskom bojom i kapljičastim izrezom na ekranu, a taj dizajnerski potpis nosi i njegov Redmi Note 8 nasljednik uz neke sitne promjene. Prednja i stražnja strana ovog uređaja prekrivena je 2.5D zakrivljenim Corning Gorilla Glass 5 zaštitnim staklom, a boje kućišta su veoma privlačne, pogotovo ljubiteljima plave boje.',
-    slikaUrl: 'https://fdn2.gsmarena.com/vv/pics/xiaomi/xiaomi-redmi-note-8-1.jpg',
-    godina: 2019,
-    popularnost: 42
-  },
-  {
-    id: 3,
-    naziv: 'Apple iPhone XR',
-    proizvodac: 'Apple',
-    cijena: 5500,
-    kratkiOpis: 'Appleov A12 procesor najmoćniji je danas mobilni čip, a jedna od glavnih prednosti XR-a je što vam omogućava pristup svim tim sokovima A12. Na Geekbenchu, on je od 10 do 15 posto veći od iPhone 8 i iPhone X u smislu čistih performansi CPU-a i 40 posto više u odnosu na performanse računalnih GPU-a. Na GFXBenchu, grafičkom mjerilu, slično je 40 do 45 posto bolje nego na iPhoneu 8 na terenskim ekranima, koji ne uzimaju u obzir razlučivost zaslona.',
-    slikaUrl: 'https://fdn2.gsmarena.com/vv/pics/apple/apple-iphone-xr-3.jpg',
-    godina: 2019,
-    popularnost: 42
-  },
-  {
-    id: 4,
-    naziv: 'Sony Xperia XZ1',
-    proizvodac: 'Sony',
-    cijena: 1800,
-    kratkiOpis: 'Xperiju XZ1 pokreće Snapdragon 835, trenutno najjači Qualcommov SoC. Četiri brze Kryo jezgre rade na taktu od 2,35 GHz, četiri štedljive na 1,9 GHz, a Adreno 540 GPU na 710 MHz. Uz 4 GB RAM-a, ne treba očekivati ništa manje od odličnih performansi koje su nam potvrdili AnTuTu i Geekbench testovi. ',
-    slikaUrl: 'https://fdn2.gsmarena.com/vv/pics/sony/sony-xperia-xz1-1.jpg',
-    godina: 2019,
-    popularnost: 42
-  },
-  {
-    id: 5,
-    naziv: 'Huawei P9 lite',
-    proizvodac: 'Huawei',
-    cijena: 1800,
-    kratkiOpis: '',
-    slikaUrl: 'https://fdn2.gsmarena.com/vv/pics/huawei/huawei-p9-lite-01.jpg',
-    godina: 2019,
-    popularnost: 42
-  },
-  {
-    id: 6,
-    naziv: 'Xiaomi Redmi Note 8',
-    proizvodac: 'Xiaomi',
-    cijena: 1800,
-    kratkiOpis: '',
-    slikaUrl: 'https://fdn2.gsmarena.com/vv/pics/xiaomi/xiaomi-redmi-note-8-1.jpg',
-    godina: 2019,
-    popularnost: 42
-  },
-  {
-    id: 7,
-    naziv: 'Xiaomi Redmi Note 8',
-    proizvodac: 'Xiaomi',
-    cijena: 1800,
-    kratkiOpis: '',
-    slikaUrl: 'https://fdn2.gsmarena.com/vv/pics/xiaomi/xiaomi-redmi-note-8-1.jpg',
-    godina: 2019,
-    popularnost: 42
-  },
-  {
-    id: 8,
-    naziv: 'Xiaomi Redmi Note 8',
-    proizvodac: 'Xiaomi',
-    cijena: 1800,
-    kratkiOpis: '',
-    slikaUrl: 'https://fdn2.gsmarena.com/vv/pics/xiaomi/xiaomi-redmi-note-8-1.jpg',
-    godina: 2019,
-    popularnost: 42
-  },
-]
 
 
 function Navigation() {
@@ -904,7 +812,6 @@ function Profil() {
   }, []);
 
   const changeHandler = event => {
-
     setData(Object.assign(data, { [event.target.name]: event.target.value }));
     console.log(event.target.name, event.target.value, '     ', data)
   };
@@ -1027,6 +934,9 @@ function AdminPloca() {
   const [oznaceni, setOznaceni] = React.useState(Array)
 
   const [modalShowUredi, setModalShowUredi] = React.useState(false)
+  const [modalShowUrediTip, setModalShowUrediTip] = React.useState(false)
+
+  const [odabraniKorisnik, setOdabraniKorisnik] = React.useState('')
 
   let user_tip
 
@@ -1041,6 +951,9 @@ function AdminPloca() {
         const decoded = jwt.verify(token, '123')
         console.log('Deko', decoded)
         user_tip = decoded.tip
+
+        let filtered = parsed.filter(elem => elem.tip !== 0)
+        if (user_tip !== 0) return setUsers(filtered)
         setUsers(parsed)
       }
     };
@@ -1076,13 +989,159 @@ function AdminPloca() {
 
   }
 
-  function urediKorisnika() {
-
+  //Tip
+  function urediTipKorisnika_handler() {
+    setOdabraniKorisnik(oznaceni[0])
+    setModalShowUrediTip(true)
   }
+  function ModalUrediTip() {
+    const [korisnik, setKorisnik] = React.useState(odabraniKorisnik)
+    const [korisnikUpdate, setKorisnikUpdate] = React.useState(Object.assign({}, odabraniKorisnik))
+
+    const [loading, setLoading] = React.useState(false)
+    const [loginResponse, setLoginResponse] = React.useState()
+
+    const submitHandler = event => {
+      event.preventDefault();
+      event.target.className += " was-validated";
+      setLoading(true)
+      //Prijava
+      let xmlhttp = new XMLHttpRequest()
+      console.log(korisnikUpdate)
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          console.log(this.responseText);
+          setLoading(false)
+          setLoginResponse(this.responseText)
+        }
+      };
+      xmlhttp.open("POST", "http://localhost:4000/urediTip", true);
+      xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+      xmlhttp.setRequestHeader('Content-type', 'application/json')
+      xmlhttp.send(
+        JSON.stringify(
+          korisnikUpdate
+        )
+      );
+    };
 
 
 
-  function MyVerticallyCenteredModal() {
+    const changeHandler = event => {
+      setKorisnikUpdate(Object.assign(korisnikUpdate, { [event.target.name]: parseInt(event.target.value)}));
+      console.log(event.target.name, event.target.value, '     ', korisnikUpdate)
+    };
+
+
+
+    if (!odabraniKorisnik) return <a>Loading...</a>
+    return (
+      <Modal
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+        show={modalShowUrediTip}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title id="contained-modal-title-vcenter">
+            Uređivanje tipa
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form >
+            <Form.Group controlId="prijava.korisnicko_ime">
+              <Form.Label>{`Korisničko ime`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="korisnicko_ime"
+                  type="text"
+                  value={korisnik.korisnicko_ime}
+                  disabled
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.tip">
+              <Form.Label>{`Trenutni tip`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="tip"
+                  type="text"
+                  value={korisnik.tip}
+                  disabled
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="exampleForm.SelectCustom">
+              <Form.Label>Novi tip</Form.Label>
+              <Form.Control as="select" 
+              name="tip"
+              onChange={(e) => changeHandler(e)}
+              custom>
+                <option value={1}>1 - Admin</option>
+                <option value={2}>2 - Moderator</option>
+                <option value={3}>3 - Korisnik</option>
+              </Form.Control>
+            </Form.Group>
+
+            <br />
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          {loading ? <Spinner style={{ marginTop: '5px' }} animation="border" role="status">
+            <span className="sr-only">Loading...</span>
+          </Spinner> : null}
+          <a>{loginResponse}</a>
+          <Button onClick={(e) => submitHandler(e)} variant="outline-dark">Ažuriraj</Button> <br />
+          <Button variant="outline-danger" onClick={() => setModalShowUrediTip(false)}>Zatvori</Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
+  //Uredi
+  function urediKorisnika_handler() {
+    setOdabraniKorisnik(oznaceni[0])
+    setModalShowUredi(true)
+  }
+  function ModalUredi() {
+    const [korisnik, setKorisnik] = React.useState(odabraniKorisnik)
+    const [korisnikUpdate, setKorisnikUpdate] = React.useState(Object.assign({}, odabraniKorisnik))
+
+    const [loading, setLoading] = React.useState(false)
+    const [loginResponse, setLoginResponse] = React.useState()
+
+    const submitHandler = event => {
+      event.preventDefault();
+      event.target.className += " was-validated";
+      setLoading(true)
+      //Prijava
+      let xmlhttp = new XMLHttpRequest()
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          console.log(this.responseText);
+          setLoading(false)
+          setLoginResponse(this.responseText)
+        }
+      };
+      xmlhttp.open("POST", "http://localhost:4000/uredi", true);
+      xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+      xmlhttp.setRequestHeader('Content-type', 'application/json')
+      xmlhttp.send(
+        JSON.stringify(
+          korisnikUpdate
+        )
+      );
+    };
+
+
+
+    const changeHandler = event => {
+      setKorisnikUpdate(Object.assign(korisnikUpdate, { [event.target.name]: event.target.value }));
+      console.log(event.target.name, event.target.value, '     ', korisnikUpdate)
+    };
+
+
+
+    if (!odabraniKorisnik) return <a>Loading...</a>
     return (
       <Modal
         size="lg"
@@ -1092,23 +1151,124 @@ function AdminPloca() {
       >
         <Modal.Header closeButton>
           <Modal.Title id="contained-modal-title-vcenter">
-            Modal heading
+            Uređivanje
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <h4>Centered Modal</h4>
-          <p>
-            Cras mattis consectetur purus sit amet fermentum. Cras justo odio,
-            dapibus ac facilisis in, egestas eget quam. Morbi leo risus, porta ac
-            consectetur ac, vestibulum at eros.
-          </p>
+
+          <Form >
+            <Form.Group controlId="prijava.korisnicko_ime">
+              <Form.Label>{`Korisničko ime - ${korisnik.korisnicko_ime}`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="korisnicko_ime"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="20"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.lozinka">
+              <Form.Label>{`Lozinka - ${korisnik.lozinka}`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="lozinka"
+                  type="password"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.email">
+              <Form.Label>{`Email - ${korisnik.email}`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="email"
+                  type="email"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.ime">
+              <Form.Label>{`Ime - ${korisnik.ime}`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="ime"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.prezime">
+              <Form.Label>{`Prezime - ${korisnik.prezime}`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="prezime"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.adresa">
+              <Form.Label>{`Adresa - ${korisnik.adresa}`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="adresa"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.opcina">
+              <Form.Label>{`Opcina - ${korisnik.opcina}`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="opcina"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.postanski_broj">
+              <Form.Label>{`Poštanski broj - ${korisnik.postanski_broj}`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="postanski_broj"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <br />
+          </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={() => setModalShowUredi(false)}>Close</Button>
+          {loading ? <Spinner style={{ marginTop: '5px' }} animation="border" role="status">
+            <span className="sr-only">Loading...</span>
+          </Spinner> : null}
+          <a>{loginResponse}</a>
+          <Button onClick={(e) => submitHandler(e)} variant="outline-dark">Ažuriraj</Button> <br />
+          <Button variant="outline-danger" onClick={() => setModalShowUredi(false)}>Zatvori</Button>
         </Modal.Footer>
       </Modal>
     );
   }
+
+
 
   function Controlls() {
     if (oznaceni.length > 1) {
@@ -1132,8 +1292,8 @@ function AdminPloca() {
     else {
       return (
         <div>
-          <Button onClick={() => { }} block style={{ marginTop: '2rem' }} variant="dark">Uredi</Button>
-          <Button block style={{ marginTop: '5px' }} variant="primary">Tip</Button>
+          <Button onClick={() => urediKorisnika_handler()} block style={{ marginTop: '2rem' }} variant="dark">Uredi</Button>
+          <Button onClick={() => urediTipKorisnika_handler()} block style={{ marginTop: '5px' }} variant="primary">Tip</Button>
           <Button block style={{ marginTop: '5px' }} variant="danger">Obriši</Button>
         </div>
       )
@@ -1141,6 +1301,7 @@ function AdminPloca() {
   }
 
   if (users === null) return <a>Učitavanje...</a>
+
 
   return (
     <Container fluid>
@@ -1186,8 +1347,8 @@ function AdminPloca() {
         </tbody>
       </Table>
 
-
-      <MyVerticallyCenteredModal />
+      <ModalUrediTip />
+      <ModalUredi />
     </Container>
 
   )

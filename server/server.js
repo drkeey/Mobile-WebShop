@@ -274,33 +274,98 @@ app.get('/upravljanjeKorisnicima', authMiddleware, (req, res) => {
 
 })
 
-app.post('/uredi', (req, res) => {
+app.post('/uredi', authMiddleware, (req, res) => {
     if (!connected) return res.sendStatus(500)
-    console.log(req.body)
-    const odabrani = req.body
-
-    switch(req.user.tip){
-        case 0:
+    //console.log(req.body)
+    const korisnik_za_update = req.body
+    const superuser = req.user
+    //console.log(korisnik_za_update)
+    switch (req.user.tip) { //Dopustenja i restrikcije po tipu korisnika superusera
+        case 0: //Admin
+            console.log('Gazimo')
             break;
-        case 1:
+        case 1: //Moderator
             //Zastita admin acca
-            if(odabrani.tip === 0) return res.sendStatus(403)
+            if (korisnik_za_update.tip === 0) return res.sendStatus(403)
             break;
     }
 
-    let q = squel.update()
-        .table("korisnici")
-        .set(`adresa="${req.body.adresa}"`)
-        .set(`postanski_broj="${req.body.postanski_broj}"`)
-        .set(`opcina="${req.body.opcina}"`)
-        .where(`lozinka="${req.user.lozinka}"`)
+    let q = squel.select()
+        .from("korisnici")
+        .where(`ID="${korisnik_za_update.ID}"`)
         .toString()
-
     con.query(q.toString(), function (err, result, fields) {
         if (err) throw err;
-        console.log(result)
-        res.sendStatus(200)
+        let q = squel.update()
+            .table("korisnici")
+        result.korisnicko_ime !== korisnik_za_update.korisnicko_ime ? q.set("korisnicko_ime", korisnik_za_update.korisnicko_ime) : null
+        result.lozinka !== korisnik_za_update.lozinka ? q.set("lozinka", korisnik_za_update.lozinka) : null
+        result.email !== korisnik_za_update.email ? q.set("email", korisnik_za_update.email) : null
+        result.ime !== korisnik_za_update.ime ? q.set("ime", korisnik_za_update.ime) : null
+        result.prezime !== korisnik_za_update.prezime ? q.set("prezime", korisnik_za_update.prezime) : null
+        result.adresa !== korisnik_za_update.adresa ? q.set("adresa", korisnik_za_update.adresa) : null
+        result.opcina !== korisnik_za_update.opcina ? q.set("opcina", korisnik_za_update.opcina) : null
+        result.postanski_broj !== korisnik_za_update.postanski_broj ? q.set("postanski_broj", korisnik_za_update.postanski_broj) : null
+        q.where(`ID="${korisnik_za_update.ID}"`)
+        q.toString()
+        con.query(q.toString(), function (err, result, fields) {
+            if (err) {
+                console.log('Neuspješno uredivanje korisnika')
+                res.status(404)
+                return res.send('Podaci nisu ažurirani')
+            };
+            console.log('Uspješno uredivanje korisnika')
+            res.status(200)
+            res.send('Podaci su ažurirani')
+        });
+
+        //res.sendStatus(200)
     });
+
+
+})
+
+app.post('/urediTip', authMiddleware, (req, res) => {
+    if (!connected) return res.sendStatus(500)
+    //console.log(req.body)
+    const korisnik_za_update = req.body
+    switch (req.user.tip) { //Dopustenja i restrikcije po tipu korisnika superusera
+        case 0: //Admin
+            console.log('Gazimo')
+            break;
+        case 1: //Moderator
+            if (korisnik_za_update.tip === 0) return res.sendStatus(403)//Zastita admin acca
+            break;
+    }
+
+    let q = squel.select()
+        .from("korisnici")
+        .where(`ID="${korisnik_za_update.korisnicko_ime}"`)
+        .toString()
+    con.query(q.toString(), function (err, pronadeniUser, fields) {
+        if (err) throw err;
+        console.log('pronadeni user', pronadeniUser)
+        let q = squel.update()
+            .table("korisnici")
+        pronadeniUser.tip !== korisnik_za_update.tip ? q.set("tip", korisnik_za_update.tip) : null
+        q.where(`ID="${korisnik_za_update.ID}"`)
+        q.toString()
+        con.query(q.toString(), function (err, result, fields) {
+            console.log(q.toString())
+            if (err) {
+                console.log('Neuspješno uredivanje korisnika')
+                res.status(404)
+                return res.send('Podaci nisu ažurirani')
+            };
+            console.log('Uspješno uredivanje korisnika', result)
+            res.status(200)
+            res.send('Podaci su ažurirani')
+        });
+
+        //res.sendStatus(200)
+    });
+
+
 })
 
 //Kosarica
