@@ -5,7 +5,8 @@ import {
   Switch,
   Route,
   Link,
-  Redirect
+  Redirect,
+  useHistory
 } from "react-router-dom";
 import logo from './logo.svg';
 import './App.css';
@@ -73,21 +74,37 @@ let kosaricaArr = []
 
 
 function Navigation() {
-
-  const [loggedIn, setLoggedIn] = React.useState(Cookies.get('loggedIn'))
+  const [loggedIn, setLoggedIn] = React.useState(null)
+  const history = useHistory();
 
 
   useEffect(async () => {
+    ahhh()
     let logged = await isLoggedIn()
     setLoggedIn(logged)
 
+    // setInterval(function(){
+    //    setLoggedIn(Cookies.get('loggedIn') == 'true' ? true : false)
+    //    console.log('Alo',Cookies.get('loggedIn'))
+    // }, 500)
+    console.log(loggedIn, Cookies.get('loggedIn'))
   }, []);
+
+  function ahhh() {
+    setInterval(function () {
+      setLoggedIn(Cookies.get('loggedIn') == 'true' ? true : false)
+      console.log('Alo', Cookies.get('loggedIn'))
+    }, 1000)
+  }
+
 
   function handleLogOut() {
     Cookies.set('token', '')
     Cookies.set('loggedIn', false)
     setLoggedIn(false)
-    console.log()
+    console.log('logo')
+    history.push("/");
+
   }
 
   function Kosarica() {
@@ -132,6 +149,8 @@ function Navigation() {
     )
   }
 
+  // if (!loggedIn) return <a>Loading...</a>
+
   return (
     <Navbar className="navbar" bg="light" expand="lg">
       <Navbar.Brand href="/">E-Mobiteli</Navbar.Brand>
@@ -143,7 +162,7 @@ function Navigation() {
             {loggedIn === true ?
               <div>
                 <NavDropdown.Item href="/profil">Pregled profila</NavDropdown.Item>
-                <NavDropdown.Item onClick={() => { handleLogOut() }} href="/">Odjava</NavDropdown.Item>
+                <NavDropdown.Item href="/" onClick={handleLogOut}>Odjava</NavDropdown.Item>
               </div>
               :
               <div>
@@ -341,7 +360,7 @@ function Uredaji() {
   return (
     <Container fluid>
       <Filter />
-      <ListGroup horizontal="md">
+      <ListGroup horizontal="md" style={{ overflowY: 'auto' }}>
         {uredaji.length === 0 ? <a>Nema uređaja sa traženim filterom</a> : null}
         {uredaji.map(mob => (
           <ListGroup.Item key={mob.id}>
@@ -543,7 +562,7 @@ function Pocetna() {
 function Prijava() {
   const [loading, setLoading] = React.useState(false)
   const [loginResponse, setLoginResponse] = React.useState()
-
+  const history = useHistory();
   const [podaci, setPodaci] = React.useState({
     korisnicko_ime: '',
     lozinka: ''
@@ -564,6 +583,8 @@ function Prijava() {
         setLoading(false)
         let token = this.responseText.replaceAll(`"`, '')
         Cookies.set('token', token)
+        Cookies.set('loggedIn', true)
+        history.push("/");
 
       }
       switch (this.status) {
@@ -1028,13 +1049,13 @@ function AdminPloca() {
 
 
     const changeHandler = event => {
-      setKorisnikUpdate(Object.assign(korisnikUpdate, { [event.target.name]: parseInt(event.target.value)}));
+      setKorisnikUpdate(Object.assign(korisnikUpdate, { [event.target.name]: parseInt(event.target.value) }));
       console.log(event.target.name, event.target.value, '     ', korisnikUpdate)
     };
 
 
 
-    if (!odabraniKorisnik) return <a>Loading...</a>
+    //if (!odabraniKorisnik) return <a>Loading...</a>
     return (
       <Modal
         size="lg"
@@ -1073,13 +1094,13 @@ function AdminPloca() {
             </Form.Group>
             <Form.Group controlId="exampleForm.SelectCustom">
               <Form.Label>Novi tip</Form.Label>
-              <Form.Control as="select" 
-              name="tip"
-              onChange={(e) => changeHandler(e)}
-              custom>
-                <option value={1}>1 - Admin</option>
-                <option value={2}>2 - Moderator</option>
-                <option value={3}>3 - Korisnik</option>
+              <Form.Control as="select"
+                name="tip"
+                onChange={(e) => changeHandler(e)}
+                custom>
+                <option value={0}>0 - Admin</option>
+                <option value={1}>1 - Moderator</option>
+                <option value={2}>2 - Korisnik</option>
               </Form.Control>
             </Form.Group>
 
@@ -1141,7 +1162,7 @@ function AdminPloca() {
 
 
 
-    if (!odabraniKorisnik) return <a>Loading...</a>
+    //if (!odabraniKorisnik) return <a>Loading...</a>
     return (
       <Modal
         size="lg"
@@ -1267,25 +1288,49 @@ function AdminPloca() {
       </Modal>
     );
   }
+  //Brisanje
+  function obrisiKorisnika_handler() {
+    const korisnici_za_obrisat = oznaceni.map(el => el.ID)
+    let xmlhttp = new XMLHttpRequest()
+    xmlhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        alert('Uspješno obrisano.');
+        window.location.reload(false);
+
+      }
+    };
+    xmlhttp.onerror = function (err) {
+      alert('Greška');
+    }
+    xmlhttp.open("POST", "http://localhost:4000/obrisi", true);
+    xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+    xmlhttp.setRequestHeader('Content-type', 'application/json')
+    console.log(korisnici_za_obrisat)
+    xmlhttp.send(
+      JSON.stringify(
+        korisnici_za_obrisat
+      )
+    );
+  }
 
 
-
+  //Buttoni
   function Controlls() {
     if (oznaceni.length > 1) {
       return (
         <div>
-          <Button disabled block style={{ marginTop: '2rem' }} variant="dark">Uredi</Button>
-          <Button disabled block style={{ marginTop: '5px' }} variant="primary">Tip</Button>
-          <Button block style={{ marginTop: '5px' }} variant="danger">Obriši</Button>
+          <Button disabled block style={{ marginTop: '2rem' }} variant="outline-dark">Uredi</Button>
+          <Button disabled block style={{ marginTop: '5px' }} variant="outline-primary">Tip</Button>
+          <Button onClick={() => obrisiKorisnika_handler()} block style={{ marginTop: '5px' }} variant="danger">Obriši</Button>
         </div>
       )
     }
     if (oznaceni.length === 0) {
       return (
         <div>
-          <Button disabled block style={{ marginTop: '2rem' }} variant="dark">Uredi</Button>
-          <Button disabled block style={{ marginTop: '5px' }} variant="primary">Tip</Button>
-          <Button disabled block style={{ marginTop: '5px' }} variant="danger">Obriši</Button>
+          <Button disabled block style={{ marginTop: '2rem' }} variant="outline-dark">Uredi</Button>
+          <Button disabled block style={{ marginTop: '5px' }} variant="outline-primary">Tip</Button>
+          <Button disabled block style={{ marginTop: '5px' }} variant="outline-danger">Obriši</Button>
         </div>
       )
     }
@@ -1294,10 +1339,195 @@ function AdminPloca() {
         <div>
           <Button onClick={() => urediKorisnika_handler()} block style={{ marginTop: '2rem' }} variant="dark">Uredi</Button>
           <Button onClick={() => urediTipKorisnika_handler()} block style={{ marginTop: '5px' }} variant="primary">Tip</Button>
-          <Button block style={{ marginTop: '5px' }} variant="danger">Obriši</Button>
+          <Button onClick={() => obrisiKorisnika_handler()} block style={{ marginTop: '5px' }} variant="danger">Obriši</Button>
         </div>
       )
     }
+  }
+
+  const [showDodajKorisnika, setShowDodajKorisnika] = React.useState(true)
+  const [responseText, setResponseText] = React.useState('')
+
+  //Dodaj korisnika
+  function DodajKorisnika() {
+    const [korisnik, setKorisnik] = React.useState({
+      tip: '',
+      korisnicko_ime: '',
+      lozinka: '',
+      email: '',
+      ime: '',
+      prezime: '',
+      adresa: '',
+      opcina: '',
+      postanski_broj: ''
+    })
+
+    const [loading, setLoading] = React.useState(false)
+    const [loginResponse, setLoginResponse] = React.useState()
+
+
+    const submitHandler = event => {
+      event.preventDefault();
+      event.target.className += " was-validated";
+      setLoading(true)
+      //Prijava
+      let xmlhttp = new XMLHttpRequest()
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          console.log(this.responseText);
+          setResponseText(this.responseText)
+        }
+      };
+      xmlhttp.open("POST", "http://localhost:4000/dodajKorisnika", true);
+      xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+      xmlhttp.setRequestHeader('Content-type', 'application/json')
+      xmlhttp.send(
+        JSON.stringify(
+          korisnik
+        )
+      );
+    };
+
+
+
+    const changeHandler = event => {
+      let obj = Object.assign(korisnik, { [event.target.name]: event.target.value })
+      setKorisnik(obj);
+      console.log(event.target.name, event.target.value, '     ', obj)
+    };
+
+    return (
+      <Modal
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+        show={showDodajKorisnika}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title id="contained-modal-title-vcenter">
+            Dodavanje novog korisnika
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form >
+            <Form.Group controlId="exampleForm.SelectCustom">
+              <Form.Label>Tip</Form.Label>
+              <Form.Control as="select"
+                name="tip"
+                onChange={(e) => changeHandler(e)}
+                custom>
+                <option value={0}>0 - Admin</option>
+                <option value={1}>1 - Moderator</option>
+                <option value={2}>2 - Korisnik</option>
+              </Form.Control>
+            </Form.Group>
+            <Form.Group controlId="prijava.korisnicko_ime">
+              <Form.Label>{`Korisničko ime`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="korisnicko_ime"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="20"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.lozinka">
+              <Form.Label>{`Lozinka`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="lozinka"
+                  type="password"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.email">
+              <Form.Label>{`Email`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="email"
+                  type="email"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.ime">
+              <Form.Label>{`Ime`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="ime"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.prezime">
+              <Form.Label>{`Prezime`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="prezime"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.adresa">
+              <Form.Label>{`Adresa`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="adresa"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.opcina">
+              <Form.Label>{`Opcina`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="opcina"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group controlId="prijava.postanski_broj">
+              <Form.Label>{`Poštanski broj`}</Form.Label>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="postanski_broj"
+                  type="text"
+                  required
+                  onChange={(e) => changeHandler(e)}
+                  maxLength="25"
+                />
+              </InputGroup>
+            </Form.Group>
+            <br />
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <a>{responseText}</a>
+          <Button onClick={(e) => submitHandler(e)} variant="outline-dark">Dodaj</Button> <br />
+          <Button variant="outline-danger" onClick={() => setShowDodajKorisnika(false)}>Zatvori</Button>
+        </Modal.Footer>
+      </Modal>
+    );
+
   }
 
   if (users === null) return <a>Učitavanje...</a>
@@ -1306,7 +1536,7 @@ function AdminPloca() {
   return (
     <Container fluid>
       <h1 style={{ textAlign: 'center' }}>Admin - upravljanje sa korisnicima</h1>
-      <Button block variant="outline-dark">Dodaj korisnika</Button>
+      <Button onClick={() => setShowDodajKorisnika(true)} block variant="dark">Dodaj korisnika</Button>
       <Controlls />
       <Table striped bordered hover style={{ maxHeight: '100vh', overflow: 'auto' }}>
         <thead>
@@ -1347,6 +1577,7 @@ function AdminPloca() {
         </tbody>
       </Table>
 
+      <DodajKorisnika />
       <ModalUrediTip />
       <ModalUredi />
     </Container>
