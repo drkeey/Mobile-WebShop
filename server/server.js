@@ -90,7 +90,7 @@ function authMiddleware(req, res, next) {
 //app.use(authMiddleware)
 app.get('/pocetna', authMiddleware, (req, res) => {
     //console.log(req.headers)
-
+    if (req.loggedIn) res.send(`Dobrodošao/la ${req.user.korisnicko_ime} nazad!`)
 })
 
 app.get('/checkLogin', authMiddleware, (req, res) => {
@@ -113,7 +113,7 @@ app.get('/uredaji', (req, res) => {
     });
 
 })
-
+//Filtriranje proizvoda
 app.post('/uredaji/filter', (req, res) => {
     if (!connected) return res.sendStatus(500)
 
@@ -252,7 +252,7 @@ app.post('/updateProfile', authMiddleware, (req, res) => {
 })
 
 
-//Admin
+//Admin i moderator stvari
 app.get('/upravljanjeKorisnicima', authMiddleware, (req, res) => {
     const dopusteni_tipovi = [0, 1] //Tipovi koji smiju upravljati ovom rutom
 
@@ -368,6 +368,118 @@ app.post('/urediTip', authMiddleware, (req, res) => {
 
 })
 
+app.post('/obrisi', authMiddleware, (req, res) => {
+    if (!connected) return res.sendStatus(500)
+    //console.log(req.body)
+    const korisnici_za_obrisatID = req.body
+    switch (req.user.tip) { //Dopustenja i restrikcije po tipu request korisnika
+        case 0: //Admin
+            console.log('Gazimo')
+            break;
+        case 1: //Moderator
+            if (korisnici_za_obrisatID.some(el => el === 0)) {
+                res.status(404)
+                return res.send('Nije moguće obrisati administratora.')
+            }
+            //if (korisnik_za_obrisat.tip === 0) return res.sendStatus(403)//Zastita admin acca
+            break;
+    }
+
+
+    let str = korisnici_za_obrisatID.join(' OR ID = ')
+    console.log(str)
+    let q = squel.delete('*')
+    q.from("korisnici")
+    q.where(
+        `ID = ${str}`
+    )
+    q.toString()
+
+    con.query(q.toString(), function (err, result, fields) {
+        console.log(q.toString())
+        if (err) {
+            console.log(err)
+            console.log('Neuspješno brisanje korisnika')
+            res.status(404)
+            return res.send('Podaci nisu obrisani. Greška')
+        };
+        console.log('Uspješno brisanje korisnika', result)
+        res.status(200)
+        res.send('Podaci su ažurirani')
+    });
+
+
+
+})
+
+app.post('/dodajKorisnika', authMiddleware, (req, res) => {
+    if (!connected) return res.sendStatus(500)
+
+    const novi_korisnik = req.body
+    console.log(novi_korisnik)
+    //Provjera dali je sve popunjeno
+    for (const [key, value] of Object.entries(novi_korisnik)) {
+        if (value === '') return res.send('Molimo popunite sve podatke')
+    }
+
+    async function provjera(next) {
+        function checkUsername() {
+            return new Promise(resolve => {
+                let q = squel.select().from("korisnici").where(`korisnicko_ime = "${req.body.korisnicko_ime}"`)
+                con.query(q.toString(), function (err, result, fields) {
+                    if (err) throw err;
+                    if (result.length > 0) return resolve(false)
+
+                    resolve(true)
+                });
+
+            })
+        }
+        function checkEmail() {
+            return new Promise(resolve => {
+                let q = squel.select().from("korisnici").where(`email = "${req.body.email}"`)
+                con.query(q.toString(), function (err, result, fields) {
+                    if (err) throw err;
+                    if (result.length > 0) return resolve(false)
+                    resolve(true)
+                });
+            })
+        }
+        const usernamePass = await checkUsername()
+        const emailPass = await checkEmail()
+
+        if (!usernamePass) return res.send('Korisničko ime već postoji u bazi podataka. Molimo da odaberete drugo.')
+        if (!emailPass) return res.send('Email već postoji u bazi podataka. Molimo da odaberete drugi.')
+        if (req.body.tip === 0) return res.send('Nije moguće postaviti tip 0')
+        next()
+    }
+    //Provjeravamo dali postoje konflikti, ako ih nema ubacujemo novog korisnika
+    provjera(function () {
+        let q = squel.insert()
+            .into("korisnici")
+            .set("tip", parseInt(req.body.tip) )
+            .set("korisnicko_ime", req.body.korisnicko_ime)
+            .set("lozinka", req.body.lozinka)
+            .set("email", req.body.email)
+            .set("ime", req.body.ime)
+            .set("prezime", req.body.prezime)
+            .set("adresa", req.body.adresa)
+            .set("opcina", req.body.opcina)
+            .set("postanski_broj", req.body.postanski_broj)
+
+
+        con.query(q.toString(), function (err, result, fields) {
+            if (err) res.send('Problem prilikom dodavanja korisnika.');
+            //console.log(result)
+            console.log('Korisnik uspjesno dodan u bazu podataka')
+            res.send('Korisnik uspjesno dodan u bazu podataka')
+        });
+    })
+
+
+
+
+})
 //Kosarica
 app.get('/kosarica', (req, res) => {
 
