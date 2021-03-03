@@ -8,7 +8,8 @@ const sessions = require("client-sessions");
 const jwt = require('jsonwebtoken');
 
 
-const express = require('express')
+const express = require('express');
+const { FaHandPointLeft } = require('react-icons/fa');
 const app = express()
 const port = 4000
 
@@ -28,7 +29,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 //Povezivanje sa bazom podataka
 let connected = false
-let con
+let db_connection
 function connectToDB() {
     const connection = mysql.createConnection({
         host: "localhost",
@@ -36,7 +37,7 @@ function connectToDB() {
         password: "",
         database: "emobiteli"
     });
-    con = connection
+    db_connection = connection
     connection.connect(function (err) {
         if (err) {
             switch (err.code) {
@@ -69,7 +70,7 @@ function authMiddleware(req, res, next) {
         var decoded = jwt.verify(token, '123');
         console.log(decoded)
         let q = squel.select().from("korisnici").where(`korisnicko_ime="${decoded.username}"`).where(`lozinka="${decoded.password}"`)
-        con.query(q.toString(), function (err, result, fields) {
+        db_connection.query(q.toString(), function (err, result, fields) {
             if (err) throw err;
             if (result.length > 0) {
                 console.log('Imaga')
@@ -84,36 +85,67 @@ function authMiddleware(req, res, next) {
 
         });
     } catch (err) {
-        // err
+        console.log(err)
+        res.sendStatus(403)
     }
 }
 //app.use(authMiddleware)
-app.get('/pocetna', authMiddleware, (req, res) => {
-    //console.log(req.headers)
-    if (req.loggedIn) res.send(`Dobrodošao/la ${req.user.korisnicko_ime} nazad!`)
+
+app.get('/checkLogin', (req, res) => {
+    if (!connected) {
+        res.status(500)
+        return res.send('Problem sa bazom podataka.')
+    }
+
+    const token = req.headers.authorization.replace('Bearer ', '')
+    if (req.headers.authorization === null) return res.sendStatus(404)
+
+    console.log(token)
+    try {
+        jwt.verify(token, '123', function (err, decoded) {
+            if (err) {
+                console.log('Nema tokena ili nevalja')
+                return res.sendStatus(202)
+            }
+
+
+            let q = squel.select().from("korisnici").where(`korisnicko_ime="${decoded.username}"`).where(`lozinka="${decoded.password}"`)
+            db_connection.query(q.toString(), function (err, result, fields) {
+                if (err) throw err;
+                if (result.length > 0) {
+                    console.log('Imaga')
+                    return res.sendStatus(201)
+                } else {
+                    console.log('Nemaga')
+                    return res.sendStatus(202)
+                }
+
+            });
+        });
+
+
+    } catch (err) {
+        console.log(err)
+        res.sendStatus(202)
+    }
+
 })
 
-app.get('/checkLogin', authMiddleware, (req, res) => {
-    //console.log(req.headers)
-    if (req.loggedIn) res.sendStatus(201)
-    else res.sendStatus(202)
-})
 
-
-//Rute za proizvode
+//Rute za uredaje
 app.get('/uredaji', (req, res) => {
     if (!connected) return res.sendStatus(500)
 
     let q = squel.select().from("uredaji")
 
-    con.query(q.toString(), function (err, result, fields) {
+    db_connection.query(q.toString(), function (err, result, fields) {
         if (err) { throw err };
-        console.log('Slanje svih uredaja', result)
+        //console.log('Slanje svih uredaja', result)
         res.send(result)
     });
 
 })
-//Filtriranje proizvoda
+//Filtriranje uredaja
 app.post('/uredaji/filter', (req, res) => {
     if (!connected) return res.sendStatus(500)
 
@@ -138,7 +170,7 @@ app.post('/uredaji/filter', (req, res) => {
         }
     }
 
-    con.query(q.toString(), function (err, result, fields) {
+    db_connection.query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         console.log('Saljem filtrirane uređaje', result)
         res.send(result)
@@ -149,6 +181,11 @@ app.post('/uredaji/filter', (req, res) => {
 
 
 //Rute za korisnike
+app.get('/pocetna', authMiddleware, (req, res) => {
+    //console.log(req.headers)
+    if (req.loggedIn) res.send(`Dobrodošao/la ${req.user.korisnicko_ime} nazad!`)
+})
+
 app.post('/registracija', (req, res) => {
     if (!connected) return res.sendStatus(500)
 
@@ -157,7 +194,7 @@ app.post('/registracija', (req, res) => {
         function checkUsername() {
             return new Promise(resolve => {
                 let q = squel.select().from("korisnici").where(`korisnicko_ime = "${req.body.korisnicko_ime}"`)
-                con.query(q.toString(), function (err, result, fields) {
+                db_connection.query(q.toString(), function (err, result, fields) {
                     if (err) throw err;
                     if (result.length > 0) return resolve(false)
 
@@ -169,7 +206,7 @@ app.post('/registracija', (req, res) => {
         function checkEmail() {
             return new Promise(resolve => {
                 let q = squel.select().from("korisnici").where(`email = "${req.body.email}"`)
-                con.query(q.toString(), function (err, result, fields) {
+                db_connection.query(q.toString(), function (err, result, fields) {
                     if (err) throw err;
                     if (result.length > 0) return resolve(false)
                     resolve(true)
@@ -188,7 +225,7 @@ app.post('/registracija', (req, res) => {
             .set("lozinka", req.body.lozinka)
             .set("email", req.body.email)
 
-        con.query(q.toString(), function (err, result, fields) {
+        db_connection.query(q.toString(), function (err, result, fields) {
             if (err) throw err;
             //console.log(result)
             console.log('Korisnik uspjesno dodan u bazu podataka')
@@ -209,7 +246,7 @@ app.post('/prijava', (req, res) => {
 
     console.log('Primam prijavu', req.body)
     let q = squel.select().from("korisnici").where(`korisnicko_ime="${req.body.korisnicko_ime}"`).where(`lozinka="${req.body.lozinka}"`)
-    con.query(q.toString(), function (err, result, fields) {
+    db_connection.query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         if (result.length > 0) {
             console.log('asdasdsdasad', result)
@@ -244,7 +281,7 @@ app.post('/updateProfile', authMiddleware, (req, res) => {
         .where(`lozinka="${req.user.lozinka}"`)
         .toString()
 
-    con.query(q.toString(), function (err, result, fields) {
+    db_connection.query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         console.log(result)
         res.sendStatus(200)
@@ -253,25 +290,23 @@ app.post('/updateProfile', authMiddleware, (req, res) => {
 
 
 //Admin i moderator stvari
-app.get('/upravljanjeKorisnicima', authMiddleware, (req, res) => {
-    const dopusteni_tipovi = [0, 1] //Tipovi koji smiju upravljati ovom rutom
-
+app.get('/adminPloca', authMiddleware, (req, res) => {
     if (!connected) return res.sendStatus(500)
 
-    let dopusten = dopusteni_tipovi.some(elem => elem === req.user.tip)
+    const dopusteni_tipovi = [0, 1] //Tipovi koji smiju upravljati ovom rutom - admin i moderator
+    const dopusten = dopusteni_tipovi.some(elem => elem === req.user.tip)
     if (!dopusten) return res.sendStatus(403)
 
+    //Slanje svih korisnika superuseru
     let q = squel.select().from("korisnici")
-    con.query(q.toString(), function (err, result, fields) {
+    db_connection.query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         if (result.length > 0) {
             //console.log('asdasdsdasad', result)
             return res.json(result)
         }
         res.sendStatus(404)
-
     });
-
 })
 
 app.post('/uredi', authMiddleware, (req, res) => {
@@ -294,7 +329,7 @@ app.post('/uredi', authMiddleware, (req, res) => {
         .from("korisnici")
         .where(`ID="${korisnik_za_update.ID}"`)
         .toString()
-    con.query(q.toString(), function (err, result, fields) {
+    db_connection.query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         let q = squel.update()
             .table("korisnici")
@@ -308,7 +343,7 @@ app.post('/uredi', authMiddleware, (req, res) => {
         result.postanski_broj !== korisnik_za_update.postanski_broj ? q.set("postanski_broj", korisnik_za_update.postanski_broj) : null
         q.where(`ID="${korisnik_za_update.ID}"`)
         q.toString()
-        con.query(q.toString(), function (err, result, fields) {
+        db_connection.query(q.toString(), function (err, result, fields) {
             if (err) {
                 console.log('Neuspješno uredivanje korisnika')
                 res.status(404)
@@ -342,7 +377,7 @@ app.post('/urediTip', authMiddleware, (req, res) => {
         .from("korisnici")
         .where(`ID="${korisnik_za_update.korisnicko_ime}"`)
         .toString()
-    con.query(q.toString(), function (err, pronadeniUser, fields) {
+    db_connection.query(q.toString(), function (err, pronadeniUser, fields) {
         if (err) throw err;
         console.log('pronadeni user', pronadeniUser)
         let q = squel.update()
@@ -350,7 +385,7 @@ app.post('/urediTip', authMiddleware, (req, res) => {
         pronadeniUser.tip !== korisnik_za_update.tip ? q.set("tip", korisnik_za_update.tip) : null
         q.where(`ID="${korisnik_za_update.ID}"`)
         q.toString()
-        con.query(q.toString(), function (err, result, fields) {
+        db_connection.query(q.toString(), function (err, result, fields) {
             console.log(q.toString())
             if (err) {
                 console.log('Neuspješno uredivanje korisnika')
@@ -395,7 +430,7 @@ app.post('/obrisi', authMiddleware, (req, res) => {
     )
     q.toString()
 
-    con.query(q.toString(), function (err, result, fields) {
+    db_connection.query(q.toString(), function (err, result, fields) {
         console.log(q.toString())
         if (err) {
             console.log(err)
@@ -426,7 +461,7 @@ app.post('/dodajKorisnika', authMiddleware, (req, res) => {
         function checkUsername() {
             return new Promise(resolve => {
                 let q = squel.select().from("korisnici").where(`korisnicko_ime = "${req.body.korisnicko_ime}"`)
-                con.query(q.toString(), function (err, result, fields) {
+                db_connection.query(q.toString(), function (err, result, fields) {
                     if (err) throw err;
                     if (result.length > 0) return resolve(false)
 
@@ -438,7 +473,7 @@ app.post('/dodajKorisnika', authMiddleware, (req, res) => {
         function checkEmail() {
             return new Promise(resolve => {
                 let q = squel.select().from("korisnici").where(`email = "${req.body.email}"`)
-                con.query(q.toString(), function (err, result, fields) {
+                db_connection.query(q.toString(), function (err, result, fields) {
                     if (err) throw err;
                     if (result.length > 0) return resolve(false)
                     resolve(true)
@@ -457,7 +492,7 @@ app.post('/dodajKorisnika', authMiddleware, (req, res) => {
     provjera(function () {
         let q = squel.insert()
             .into("korisnici")
-            .set("tip", parseInt(req.body.tip) )
+            .set("tip", parseInt(req.body.tip))
             .set("korisnicko_ime", req.body.korisnicko_ime)
             .set("lozinka", req.body.lozinka)
             .set("email", req.body.email)
@@ -468,7 +503,7 @@ app.post('/dodajKorisnika', authMiddleware, (req, res) => {
             .set("postanski_broj", req.body.postanski_broj)
 
 
-        con.query(q.toString(), function (err, result, fields) {
+        db_connection.query(q.toString(), function (err, result, fields) {
             if (err) res.send('Problem prilikom dodavanja korisnika.');
             //console.log(result)
             console.log('Korisnik uspjesno dodan u bazu podataka')
@@ -480,14 +515,107 @@ app.post('/dodajKorisnika', authMiddleware, (req, res) => {
 
 
 })
+
+
 //Kosarica
-app.get('/kosarica', (req, res) => {
+app.post('/addToKosara', (req, res) => {
+    if (!connected) return res.sendStatus(500)
+
+    let uredaj_id = req.header('uredajid')
+    console.log('asdads', req.body, req.header('uredajid'))
+
+    if (req.headers.authorization === undefined) return res.sendStatus(201)
+
+    //Ako je logiran korisnik
+    const token = req.headers.authorization.replace('Bearer ', '')
+    jwt.verify(token, '123', function (err, decoded) {
+        if (err) {
+            console.log('Korisnik nije logiran ili token nevalja')
+            return res.sendStatus(202)
+        }
+
+        let q = squel.select().from("korisnici").where(`korisnicko_ime="${decoded.username}"`).where(`lozinka="${decoded.password}"`).field("korisnici.kosara")
+        db_connection.query(q.toString(), function (err, result, fields) {
+            if (err) throw err;
+            var decoded = jwt.verify(token, '123');
+            console.log(decoded, 'retultt', Boolean(result[0].kosara === '')) // bar
+            let kosarica = []
+            if (result[0].kosara === '') {//Ako je prazna kosarica
+                kosarica = [uredaj_id + ' ']
+            } else {
+                kosarica = result[0].kosara.split(' ').map(Number)
+                let upp = kosarica.filter(el => el !== 0)
+                kosarica = upp
+                kosarica.push(uredaj_id)
+                let filtered = kosarica.map(el => parseInt(el))
+                kosarica = filtered
+            }
+
+            let q = squel.update().table("korisnici").set("kosara", kosarica.join(' ')).where(`korisnicko_ime="${decoded.username}"`).where(`lozinka="${decoded.password}"`)
+            db_connection.query(q.toString(), function (err, result, fields) {
+                if (err) throw err;
+                console.log('uspjeh', result, fields, q.toString())
+                res.send(kosarica)
+            });
+
+
+        });
+
+
+    });
 
 })
-app.post('/kosarica', (req, res) => {
 
+app.get('/kosara', (req, res) => {
+    if (!connected) return res.sendStatus(500)
+
+    console.log('asdads', req.headers.authorization, req.body)
+
+    if (req.headers.authorization === undefined) return res.sendStatus(201)
+
+
+    handleGetUredaji = (uredajiArr, next) => {
+        var count = {};
+        uredajiArr.forEach(function (i) { count[i] = (count[i] || 0) + 1; });
+        console.log(count);
+        
+        const mobiteliUnique = Object.keys(count)
+        console.log(mobiteliUnique);
+
+
+        let q = squel.select().from('uredaji')
+        let str = 'ID=' + mobiteliUnique.join(' OR ID=')
+        q.where(str)
+        console.log(q.toString())
+        db_connection.query(q.toString(), function (err, result, fields) {
+            if (err) throw err;
+            next(result)
+        });
+    }
+
+    //Ako je logiran korisnik
+    const token = req.headers.authorization.replace('Bearer ', '')
+    jwt.verify(token, '123', function (err, decoded) {
+        if (err) {
+            console.log('Korisnik nije logiran ili token nevalja')
+            return res.sendStatus(202)
+        }
+
+        let q = squel.select().from(squel.select().from('korisnici'), 'k').where(`korisnicko_ime="${decoded.username}"`).where(`lozinka="${decoded.password}"`).field("k.kosara")
+        db_connection.query(q.toString(), function (err, result, fields) {
+            if (err) throw err;
+            let st = result[0].kosara.split(' ')
+            st = st.map(el => parseInt(el))
+            console.log(st)
+            handleGetUredaji(st, (uredaji) => {
+                //console.log(uredaji)
+                res.send(JSON.stringify(uredaji))
+            })
+        });
+
+
+    });
 })
-
 
 
 
