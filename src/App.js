@@ -57,7 +57,7 @@ const isLoggedIn = () => {
 
 
 export default function App() {
-  const [logged, isLogged] = React.useState(null)
+  const [logged, isLogged] = React.useState(false)
 
   useEffect(async () => {
     let log = await isLoggedIn()
@@ -70,7 +70,7 @@ export default function App() {
 
   }, []);
 
-  if (logged === null) return null
+  //if (logged === false) return <a>asdasdasd</a>
 
   return (
     <Router>

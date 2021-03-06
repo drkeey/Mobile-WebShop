@@ -54,6 +54,10 @@ export default function Profil() {
           setData(parsed)
           setLoggedIn(true)
         }
+        if(this.status === 401){ //Redirect ako je logiran vec
+          alert('Vec si logiran')  
+        }
+
       };
       xmlhttp.open("GET", "http://localhost:4000/profil", true);
       xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)

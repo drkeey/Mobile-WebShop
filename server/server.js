@@ -1,25 +1,25 @@
+
 const mysql = require('mysql');
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const squel = require('squel')
-const session = require('express-session');
 const cookieParser = require('cookie-parser');
-const sessions = require("client-sessions");
 const jwt = require('jsonwebtoken');
 
 
 const express = require('express');
-const { FaHandPointLeft } = require('react-icons/fa');
 const app = express()
 const port = 4000
 
-
-
+const db = require('./db')
+const db_connection = db.db_connection
+let connected = db.db_connected
 //Middleware
 var corsOptions = {
     origin: 'http://localhost:3000',
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
+
 
 app.use(cors(corsOptions))
 app.use(cookieParser());
@@ -27,43 +27,18 @@ app.use(cookieParser());
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }));
 
+//app.use('./p')
+
 //Povezivanje sa bazom podataka
-let connected = false
-let db_connection
-function connectToDB() {
-    const connection = mysql.createConnection({
-        host: "localhost",
-        user: "root",
-        password: "",
-        database: "emobiteli"
-    });
-    db_connection = connection
-    connection.connect(function (err) {
-        if (err) {
-            switch (err.code) {
-                case 'ECONNREFUSED':
-                    connected = false
-                    return console.error('Povezivanje sa bazom podataka neuspjesno', err.code)
-            }
-        } else {
-            console.log("Povezan sa bazom podataka!");
-            connected = true
-        }
-
-    });
-
-
-}
-connectToDB()
-let db_reconnect_interval = setInterval(function () {
-    if (!connected) return connectToDB()
-
-    clearInterval(db_reconnect_interval)
-}, 2000)
+//let connected = false
+//let db_connection
 
 function authMiddleware(req, res, next) {
     console.log('hasiram')
-    if (!req.headers.authorization) return res.send('Potrebna autorizacija za pregled')
+    if (!req.headers.authorization) {
+        res.status(404)
+        return res.send('Potrebna autorizacija za pregled')
+    }
     const token = req.headers.authorization.replace('Bearer ', '')
 
     try {
@@ -236,7 +211,7 @@ app.post('/registracija', (req, res) => {
 })
 
 app.post('/prijava', (req, res) => {
-    if (!connected) return res.sendStatus(500)
+    //if (!connected) return res.sendStatus(500)
 
     //za svaki slucaj
     if (!req.body.korisnicko_ime || !req.body.lozinka) {
@@ -259,34 +234,6 @@ app.post('/prijava', (req, res) => {
     });
 })
 
-app.get('/profil', authMiddleware, (req, res) => {
-    if (!connected) return res.sendStatus(500)
-    if (!req.loggedIn) return res.sendStatus(403)
-
-    res.status(200)
-    res.send(req.user)
-
-})
-
-app.post('/updateProfile', authMiddleware, (req, res) => {
-    if (!connected) return res.sendStatus(500)
-
-    console.log(req.body)
-
-    let q = squel.update()
-        .table("korisnici")
-        .set(`adresa="${req.body.adresa}"`)
-        .set(`postanski_broj="${req.body.postanski_broj}"`)
-        .set(`opcina="${req.body.opcina}"`)
-        .where(`lozinka="${req.user.lozinka}"`)
-        .toString()
-
-    db_connection.query(q.toString(), function (err, result, fields) {
-        if (err) throw err;
-        console.log(result)
-        res.sendStatus(200)
-    });
-})
 
 
 //Admin i moderator stvari
@@ -574,22 +521,25 @@ app.get('/kosara', (req, res) => {
     if (req.headers.authorization === undefined) return res.sendStatus(201)
 
 
-    handleGetUredaji = (uredajiArr, next) => {
+    handleGetUredaji = (uredajiArr, next) => { //Hvatanje uredaja iz baze radi displaya kosarice
         var count = {};
         uredajiArr.forEach(function (i) { count[i] = (count[i] || 0) + 1; });
-        console.log(count);
-        
+        console.log('Count', count);
         const mobiteliUnique = Object.keys(count)
-        console.log(mobiteliUnique);
-
-
+        console.log('Unique', mobiteliUnique);
         let q = squel.select().from('uredaji')
         let str = 'ID=' + mobiteliUnique.join(' OR ID=')
         q.where(str)
         console.log(q.toString())
         db_connection.query(q.toString(), function (err, result, fields) {
             if (err) throw err;
-            next(result)
+            let final = result.map(el => {
+                let copy = Object.assign({}, el)
+                copy.kolicina = count[el.id]
+                return copy
+            })
+            //console.log(final)
+            next(final)
         });
     }
 
@@ -606,7 +556,7 @@ app.get('/kosara', (req, res) => {
             if (err) throw err;
             let st = result[0].kosara.split(' ')
             st = st.map(el => parseInt(el))
-            console.log(st)
+            console.log('a', st)
             handleGetUredaji(st, (uredaji) => {
                 //console.log(uredaji)
                 res.send(JSON.stringify(uredaji))
@@ -617,6 +567,54 @@ app.get('/kosara', (req, res) => {
     });
 })
 
+app.post('/ukloniIzKosarice', (req, res) => {
+    if (!connected) return res.sendStatus(500)
+    console.log('asdads', req.headers.authorization, req.body)
+
+    let uredaj_id = req.header('uredajid')
+    if (uredaj_id === '') return res.sendStatus(404)
+    if (req.headers.authorization === undefined) return res.sendStatus(201)
+
+    //Ako je logiran korisnik
+    const token = req.headers.authorization.replace('Bearer ', '')
+    jwt.verify(token, '123', function (err, decoded) {
+        if (err) {
+            console.log('Korisnik nije logiran ili token nevalja')
+            return res.sendStatus(202)
+        }
+
+        let q = squel.update().table("korisnici").where(`korisnicko_ime="${decoded.username}"`).where(`lozinka="${decoded.password}"`).set('kosara',)
+        db_connection.query(q.toString(), function (err, result, fields) {
+            if (err) throw err;
+            var decoded = jwt.verify(token, '123');
+            console.log(decoded, 'retultt', Boolean(result[0].kosara === '')) // bar
+            let kosarica = []
+            if (result[0].kosara === '') {//Ako je prazna kosarica
+                kosarica = [uredaj_id + ' ']
+            } else {
+                kosarica = result[0].kosara.split(' ').map(Number)
+                let upp = kosarica.filter(el => el !== 0)
+                kosarica = upp
+                kosarica.push(uredaj_id)
+                let filtered = kosarica.map(el => parseInt(el))
+                kosarica = filtered
+            }
+
+            let q = squel.update().table("korisnici").set("kosara", kosarica.join(' ')).where(`korisnicko_ime="${decoded.username}"`).where(`lozinka="${decoded.password}"`)
+            db_connection.query(q.toString(), function (err, result, fields) {
+                if (err) throw err;
+                console.log('uspjeh', result, fields, q.toString())
+                res.send(kosarica)
+            });
+
+
+        });
+
+
+    });
+
+
+})
 
 
 

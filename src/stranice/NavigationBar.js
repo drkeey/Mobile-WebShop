@@ -44,11 +44,8 @@ function Kosarica() {
           </div>
         )
       })} */}
-            <div style={{ textAlign: 'right' }}>
-                <br /><b style={{ marginRight: '10px' }}>Ukupno: 2.100,00 HRK</b>
-            </div>
-            <NavDropdown.Divider />
-            <NavDropdown.Item href="#action/3.4" href="/narudzba">Završi kupnju</NavDropdown.Item>
+
+            <NavDropdown.Item href="#action/3.4" href="/kosara">Pregled košare</NavDropdown.Item>
         </NavDropdown>
     )
 }
@@ -72,7 +69,7 @@ export default function NavigationBar(props) {
         history.push("/");
     }
 
-    
+
 
     // if (!loggedIn) return <a>Loading...</a>
 

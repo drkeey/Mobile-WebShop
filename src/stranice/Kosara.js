@@ -7,6 +7,9 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+
 
 import Cookies from 'js-cookie';
 
@@ -18,50 +21,78 @@ export default function Kosara() {
 
     //Get kosara uredaji
     useEffect(() => {
+        handleDohvatiIzKosarice()
+    }, []);
+
+    const handleDohvatiIzKosarice = () => {
         let xmlhttp = new XMLHttpRequest()
         xmlhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                console.log(this.response);
                 setKosaraUredaji(JSON.parse(this.responseText))
-
+                console.table(JSON.parse(this.responseText))
                 let cijena_ukArr = JSON.parse(this.responseText).map(el => el.cijena)
-                let final = cijena_ukArr.reduce((a, b) => a + b, 0)
-                console.log('final', final, cijena_ukArr)
-                setUkupnaCijena(final)
-
-                console.log(cijena_ukArr.reduce((a, b) => a + b, 0))
+                let ukupno = cijena_ukArr.reduce((a, b) => a + b, 0)
+                setUkupnaCijena(ukupno)
             }
         };
         xmlhttp.open("GET", "http://localhost:4000/kosara", true);
         if (Cookies.get('token') !== '') xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
         xmlhttp.send();
-    }, []);
+    }
+
+    const handleUkloniIzKosarice = (uredaj) => {
+        let xmlhttp = new XMLHttpRequest()
+        xmlhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+               console.log(this.responseText)
+            }
+        };
+        xmlhttp.open("POST", "http://localhost:4000/ukloniIzKosarice", true);
+        if (Cookies.get('token') !== '') xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+        xmlhttp.setRequestHeader('uredajID', uredaj.id)
+        xmlhttp.send();
+    }
 
 
     return (
         <Container fluid>
             <Jumbotron >
-                <h1 style={{ textAlign: 'center' }}>Narudžba</h1>
+                <h1 style={{ textAlign: 'center' }}>Košara</h1>
                 <ListGroup variant="flush">
                     {kosara_uredaji.map((uredaj, index) => (
                         <ListGroup.Item key={index}>
-                            <img src={`${uredaj.slika_url}`} style={{ width: '100px', height: '100px' }} alt="Avatar" />
-                            <a style={{ marginLeft: '10px' }}>{uredaj.naziv}</a>
-                            <div style={{ textAlign: 'right' }}>
-                                <b>Cijena</b><br />
-                                <a>{`${uredaj.cijena} ,00 HRK`}</a>
-                            </div>
+                            <Row>
+                                <Col>
+                                    <Row>
+                                        <Col md="auto">
+                                            <img src={`${uredaj.slika_url}`} style={{ width: '10rem', height: '10rem' }} alt="Avatar" />
+                                        </Col>
+                                        <Col style={{ textAlign: 'center', margin: 'auto' }}>
+                                            <h3 style={{ marginLeft: '5px' }}>{uredaj.naziv}</h3>
+                                        </Col>
+                                    </Row>
+                                </Col>
+                                <Col md="auto" style={{ textAlign: 'right' }}>
+                                    <b>Količina</b><br />
+                                    <a>{`${uredaj.kolicina}X`}</a><br />
+                                    <b>Cijena</b><br />
+                                    <a>{`${uredaj.cijena * uredaj.kolicina},00 HRK`}</a><br />
+                                    <Button onClick={() => handleUkloniIzKosarice(uredaj)} variant="dark">Ukloni</Button>
+                                </Col>
+                            </Row>
+
+
                         </ListGroup.Item>
                     ))}
 
                     <ListGroup.Item>
                         <div style={{ textAlign: 'right' }}>
-                            <b>Ukupno za platiti: {ukupnaCijena},00 HRK</b>
+                            <b>Ukupna cijena: {ukupnaCijena},00 HRK</b>
                         </div>
                     </ListGroup.Item>
                 </ListGroup>
-                <Button block variant="dark">Kupi kao gost</Button>
-                <Button block style={{ marginTop: '2px' }} variant="dark">Nastavi kupnju kao korisnik</Button>
+                {/* <Button block variant="dark">Kupi kao gost</Button>
+                <Button block style={{ marginTop: '2px' }} variant="dark">Nastavi kupnju kao korisnik</Button> */}
             </Jumbotron>
             <Jumbotron>
                 <h1 style={{ textAlign: 'center' }}>Podaci</h1>
@@ -162,10 +193,10 @@ export default function Kosara() {
                     {kosara_uredaji.map(el => (
                         <div><a><b>{el.naziv} - </b>{el.cijena},00 HRK</a><br /></div>
                     ))}
-                    
+
                     <a>Plaćanje: <b>Pouzećem</b></a><br />
                     <a>Dostava: <b>29,99 HRK</b></a><br />
-                    <b>Ukupna cijena: {ukupnaCijena + dostava},00 HRK</b>
+                    <a>Ukupna cijena:</a> <b>{ukupnaCijena + dostava},00 HRK</b>
                 </div>
                 <Button block variant="dark">Naruči</Button>
 
