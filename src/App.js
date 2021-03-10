@@ -25,7 +25,7 @@ import Kosara from "./stranice/Kosara"
 
 
 //Provjera sesije
-const isLoggedIn = () => {
+function isLoggedIn() {
   return new Promise(resolve => {
     let final = null
     let xmlhttp = new XMLHttpRequest()
@@ -47,7 +47,6 @@ const isLoggedIn = () => {
       if (final !== null) return resolve(final)
     }, 100)
     if (Cookies.get('token') === '') return resolve(false)
-
     xmlhttp.open("GET", "http://localhost:4000/checkLogin", true);
     xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
     xmlhttp.send();
@@ -57,26 +56,50 @@ const isLoggedIn = () => {
 
 
 export default function App() {
-  const [logged, isLogged] = React.useState(false)
+  const [logged, setLogged] = React.useState(async () => {
+    let final = null
+    let xmlhttp = new XMLHttpRequest()
+    xmlhttp.onreadystatechange = function () {
+      if (this.readyState == 4) {
+        console.log(this.responseText, this.status)
+        switch (this.status) {
+          case 201: //Logiran
+            console.log('pkl')
+            final = true
+            return setLogged(true)
+            break;
+          case 202: //Nije logiran
+            console.log('pk22l')
+            final = false
+            return setLogged(false)
+            break;
+        }
+      }
+    };
 
-  useEffect(async () => {
-    let log = await isLoggedIn()
-    isLogged(log)
-    console.log('Dalisam logiran', log)
-    if (logged === false) {
-      Cookies.set('token', '')
-      Cookies.set('loggedIn', false)
-    }
+    // let int = setInterval(() => {
+    //   //if (final !== null) return resolve(final)
+    //   if (final !== null){
+    //     console.log('LOGIRAN:', final)
+    //     setLogged(final)
+    //     return clearInterval(int)
+    //   } 
+    //  // if (Cookies.get('token') === '') setLogged(false)
+    // }, 100)
 
-  }, []);
+    xmlhttp.open("GET", "http://localhost:4000/checkLogin", true);
+    xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+    xmlhttp.send();
+  })
 
-  //if (logged === false) return <a>asdasdasd</a>
 
+  if (typeof logged !== 'boolean') return <a>Loading...</a>
+  console.log(typeof logged, logged)
   return (
     <Router>
       <div className="App">
         <header>
-          <NavigationBar isLogged={logged} />
+          <NavigationBar isLogged={Boolean(logged)} />
         </header>
         <div className="body">
           <Switch>
@@ -84,26 +107,26 @@ export default function App() {
               <Uredaji />
             </Route>
             <Route path="/kosara">
-              <Kosara />
+              {Boolean(logged) !== true ? <Redirect to="/" /> : <Kosara />}
             </Route>
             <Route path="/prijava">
-              {logged ? <Redirect to="/" /> : <Prijava />}
+              {Boolean(logged) === true ? <Redirect to="/" /> : <Prijava />}
             </Route>
             <Route path="/registracija">
-              {logged ? <Redirect to="/" /> : <Registracija />}
+              {Boolean(logged) === true ? <Redirect to="/" /> : <Registracija />}
             </Route>
             <Route path="/resetLozinke">
               {/* <ResetirajLozinku /> */}
             </Route>
             <Route path="/profil">
-              {logged ? <Profil /> : <Redirect to="/" />}
+              {Boolean(logged) === true ? <Profil /> : <Redirect to="/" />}
             </Route>
             <Route path="/adminPloca">
-              {logged ? <AdminPloca /> : <Redirect to="/" />}
+              {Boolean(logged) === true ? <AdminPloca /> : <Redirect to="/" />}
               <AdminPloca />
             </Route>
             <Route path="/">
-              <Pocetna />
+              <Pocetna isLogged={Boolean(logged)} />
             </Route>
 
           </Switch>

@@ -1,58 +1,50 @@
 const mysql = require('mysql');
 
+module.exports = {
+    connection: null, //Za query
+    connected: false, //Povezan sa bazom?
 
-let db_connected = false
+    get getConnection(){
+        return this.connection
+    },
+    get getConnected(){
+        return this.connected
+    },
 
-const db_connection = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "emobiteli"
-});
-db_connection.connect(function (err) {
-    if (err) {
-        switch (err.code) {
-            case 'ECONNREFUSED':
-                db_connected = false
-                return console.error('Povezivanje sa bazom podataka neuspjesno', err.code)
-        }
-    } else {
-        console.log("Povezan sa bazom podataka!");
-        db_connected = true
+    set setConnection(con){
+        this.connection = con
+    },
+    set setConnected(bool){
+        this.connected = bool
+    },
+    
+    connectToDB: function () {
+        let instance = this
+
+        const connection = mysql.createConnection({
+            host: "localhost",
+            user: "root",
+            password: "",
+            database: "emobiteli"
+        });
+        instance.setConnection = connection   
+
+        let interval = setInterval(function () {
+            connection.connect(function (err) {
+                if (err) {
+                    switch (err.code) {
+                        case 'ECONNREFUSED':
+                            instance.setConnected = false
+                            return console.error('Povezivanje sa bazom podataka neuspjesno', err.code)
+                    }
+                } else {
+                    instance.setConnected = true
+                    console.log("Povezan sa bazom podataka!");
+                    clearInterval(interval)
+                }
+            });
+        }, 1000)
     }
 
-});
-
-function connectToDB() {
-    let db_connection
-    const connection = mysql.createConnection({
-        host: "localhost",
-        user: "root",
-        password: "",
-        database: "emobiteli"
-    });
-    db_connection = connection
-    connection.connect(function (err) {
-        if (err) {
-            switch (err.code) {
-                case 'ECONNREFUSED':
-                    db_connected = false
-                    return console.error('Povezivanje sa bazom podataka neuspjesno', err.code)
-            }
-        } else {
-            console.log("Povezan sa bazom podataka!");
-            db_connected = true
-        }
-
-    });
-}
-
-let db_reconnect_interval = setInterval(function () {
-    if (!db_connected) return connectToDB()
-
-    clearInterval(db_reconnect_interval)
-}, 2000)
-
-
-exports.db_connection = db_connection; //Konekcija sa bazom, potrebo za query
-exports.db_connected = db_connected //Bool dali je povezan server sa bazom
+}; //Konekcija sa bazom, potrebo za query
+// exports.db_connected = db_connected //Bool dali je povezan server sa bazom

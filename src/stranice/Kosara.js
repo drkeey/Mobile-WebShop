@@ -18,6 +18,40 @@ export default function Kosara() {
     const [kosara_uredaji, setKosaraUredaji] = React.useState([])
     const [ukupnaCijena, setUkupnaCijena] = React.useState(0)
     const [dostava, setDostava] = React.useState(30)
+    const [podaci, setPodaci] = React.useState({})
+    const [response, setResponse] = React.useState('')
+
+
+    const [showPodaci, setShowPodaci] = React.useState(false)
+    const [showDostava, setShowDostava] = React.useState(false)
+    const [showFinalizacija, setShowFinalizacija] = React.useState(false)
+
+
+    const handleSetUserPodaci = () => {
+        let xmlhttp = new XMLHttpRequest()
+        xmlhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                setPodaci(JSON.parse(this.responseText))
+                console.log(podaci, ',,,,', JSON.parse(this.responseText))
+            }
+        };
+        xmlhttp.open("GET", "http://localhost:4000/podaci", true);
+        xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+        xmlhttp.send();
+    }
+
+    const handleSetKosara = (res) => {
+        let parsed = res
+        //console.log('Pasiranp', parsed)
+        if (parsed === 'OK') {//Ako nema proizvoda
+            setUkupnaCijena('0')
+            return setKosaraUredaji([])
+        }
+        setKosaraUredaji(JSON.parse(res))
+        let cijena_ukArr = JSON.parse(res).map(el => el.cijena * el.kolicina)
+        let ukupno = cijena_ukArr.reduce((a, b) => a + b, 0)
+        setUkupnaCijena(ukupno)
+    }
 
     //Get kosara uredaji
     useEffect(() => {
@@ -28,15 +62,14 @@ export default function Kosara() {
         let xmlhttp = new XMLHttpRequest()
         xmlhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                setKosaraUredaji(JSON.parse(this.responseText))
-                console.table(JSON.parse(this.responseText))
-                let cijena_ukArr = JSON.parse(this.responseText).map(el => el.cijena)
-                let ukupno = cijena_ukArr.reduce((a, b) => a + b, 0)
-                setUkupnaCijena(ukupno)
+                handleSetKosara(this.responseText)
+            }
+            if(this.readyState == 4 && this.status == 403){
+                setResponse('err')
             }
         };
         xmlhttp.open("GET", "http://localhost:4000/kosara", true);
-        if (Cookies.get('token') !== '') xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+        xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
         xmlhttp.send();
     }
 
@@ -44,15 +77,16 @@ export default function Kosara() {
         let xmlhttp = new XMLHttpRequest()
         xmlhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-               console.log(this.responseText)
+                handleDohvatiIzKosarice()
             }
         };
-        xmlhttp.open("POST", "http://localhost:4000/ukloniIzKosarice", true);
-        if (Cookies.get('token') !== '') xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+        xmlhttp.open("POST", "http://localhost:4000/kosara/ukloniIzKosarice", true);
+        xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
         xmlhttp.setRequestHeader('uredajID', uredaj.id)
         xmlhttp.send();
     }
 
+    if(response === 'err') return <a>Nemate dozvolu za ovu stranicu.</a>
 
     return (
         <Container fluid>
@@ -90,6 +124,8 @@ export default function Kosara() {
                             <b>Ukupna cijena: {ukupnaCijena},00 HRK</b>
                         </div>
                     </ListGroup.Item>
+                    <Button onClick={() => handleSetUserPodaci()} block variant="dark">Naruči</Button>
+
                 </ListGroup>
                 {/* <Button block variant="dark">Kupi kao gost</Button>
                 <Button block style={{ marginTop: '2px' }} variant="dark">Nastavi kupnju kao korisnik</Button> */}
@@ -101,8 +137,10 @@ export default function Kosara() {
                         <InputGroup.Text id="basic-addon1">Ime</InputGroup.Text>
                     </InputGroup.Prepend>
                     <FormControl
-                        aria-label="Username"
+                        value={podaci.ime}
+                        aria-label="Ime"
                         aria-describedby="basic-addon1"
+                        disabled
                     />
                 </InputGroup>
                 <InputGroup className="mb-3">
@@ -110,8 +148,10 @@ export default function Kosara() {
                         <InputGroup.Text id="basic-addon1">Prezime</InputGroup.Text>
                     </InputGroup.Prepend>
                     <FormControl
-                        aria-label="Username"
+                        value={podaci.prezime}
+                        aria-label="Prezime"
                         aria-describedby="basic-addon1"
+                        disabled
                     />
                 </InputGroup>
 
@@ -120,8 +160,10 @@ export default function Kosara() {
                         <InputGroup.Text id="basic-addon1">Adresa</InputGroup.Text>
                     </InputGroup.Prepend>
                     <FormControl
-                        aria-label="Username"
+                        value={podaci.adresa}
+                        aria-label="Adresa"
                         aria-describedby="basic-addon1"
+                        disabled
                     />
                 </InputGroup>
 
@@ -130,8 +172,10 @@ export default function Kosara() {
                         <InputGroup.Text id="basic-addon1">Općina</InputGroup.Text>
                     </InputGroup.Prepend>
                     <FormControl
-                        aria-label="Username"
+                        value={podaci.opcina}
+                        aria-label="Općina"
                         aria-describedby="basic-addon1"
+                        disabled
                     />
                 </InputGroup>
 
@@ -140,8 +184,10 @@ export default function Kosara() {
                         <InputGroup.Text id="basic-addon1">Poštanski broj</InputGroup.Text>
                     </InputGroup.Prepend>
                     <FormControl
-                        aria-label="Username"
+                        value={podaci.postanski_broj}
+                        aria-label="Postanski_broj"
                         aria-describedby="basic-addon1"
+                        disabled
                     />
                 </InputGroup>
 
@@ -150,7 +196,7 @@ export default function Kosara() {
                         <InputGroup.Text id="basic-addon1">Mobitel</InputGroup.Text>
                     </InputGroup.Prepend>
                     <FormControl
-                        aria-label="Username"
+                        aria-label="Mobitel"
                         aria-describedby="basic-addon1"
                     />
                 </InputGroup>
@@ -160,7 +206,7 @@ export default function Kosara() {
                         <InputGroup.Text id="basic-addon1">Napomena za dostavu</InputGroup.Text>
                     </InputGroup.Prepend>
                     <FormControl
-                        aria-label="Username"
+                        aria-label="Napomena_za_dostavu"
                         aria-describedby="basic-addon1"
                     />
                 </InputGroup>
@@ -191,7 +237,7 @@ export default function Kosara() {
                 <h1 style={{ textAlign: 'center' }}>Finalizacija</h1>
                 <div style={{ textAlign: 'right' }}>
                     {kosara_uredaji.map(el => (
-                        <div><a><b>{el.naziv} - </b>{el.cijena},00 HRK</a><br /></div>
+                        <div><a><b>{el.naziv} {`(${el.kolicina}X)`} - </b>{el.cijena * el.kolicina},00 HRK</a><br /></div>
                     ))}
 
                     <a>Plaćanje: <b>Pouzećem</b></a><br />

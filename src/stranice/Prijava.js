@@ -12,6 +12,8 @@ import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
 
+const CryptoJS = require("crypto-js");
+
 
 export default function Prijava() {
     const [loading, setLoading] = React.useState(false)
@@ -54,7 +56,10 @@ export default function Prijava() {
       console.log(podaci)
       xmlhttp.send(
         JSON.stringify(
-          podaci
+          {
+            korisnicko_ime: podaci.korisnicko_ime,
+            lozinka: CryptoJS.AES.encrypt(podaci.lozinka, '123').toString()
+          }
         )
       );
     };

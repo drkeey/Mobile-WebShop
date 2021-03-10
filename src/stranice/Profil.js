@@ -10,8 +10,8 @@ import { Container } from "react-bootstrap";
 import Cookies from 'js-cookie';
 
 
-export default function Profil() {
-    const [loggedIn, setLoggedIn] = React.useState()
+export default function Profil(props) {
+    const [loggedIn, setLoggedIn] = React.useState(Boolean(props.isLogged))
     const [data, setData] = React.useState()
     const [editProfile, setEditProfile] = React.useState(false)
   
@@ -26,7 +26,7 @@ export default function Profil() {
       xmlhttp.onerror = function (err) {
         alert('Greška');
       }
-      xmlhttp.open("POST", "http://localhost:4000/updateProfile", true);
+      xmlhttp.open("POST", "http://localhost:4000/profil/updateProfile", true);
       xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
       xmlhttp.setRequestHeader('Content-type', 'application/json')
       xmlhttp.send(
@@ -45,6 +45,7 @@ export default function Profil() {
     useEffect(async () => {
       // let logged = await isLoggedIn()
       // setLoggedIn(logged)
+      console.log('Gasirammm')
       let xmlhttp = new XMLHttpRequest()
       xmlhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
@@ -52,10 +53,9 @@ export default function Profil() {
           let parsed = JSON.parse(this.responseText)
           console.log(parsed);
           setData(parsed)
-          setLoggedIn(true)
         }
-        if(this.status === 401){ //Redirect ako je logiran vec
-          alert('Vec si logiran')  
+        if(this.status === 403){ //Redirect ako je logiran vec
+          return <a>Zabranjen pristp</a>
         }
 
       };
@@ -70,13 +70,15 @@ export default function Profil() {
       console.log(event.target.name, event.target.value, '     ', data)
     };
   
-    if (!loggedIn) return null
-  
+    //if (!loggedIn) return null
+    if (!data) return <a>Loading...</a>
+
+
     return (
       <Container fluid>
         <h1 style={{ textAlign: 'center' }}>Profil</h1>
         <div style={{ margin: 'auto', width: '30%', textAlign: 'center' }}>
-  
+          {/* <Image src="holder.js/171x180" rounded /> */}
           <Form.Group controlId="profil.korisnicko_ime">
             <Form.Label>Korisničko ime</Form.Label>
             <InputGroup className="mb-3">

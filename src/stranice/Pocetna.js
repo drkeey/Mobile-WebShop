@@ -6,14 +6,14 @@ import Button from 'react-bootstrap/Button';
 
 
 
-function Pocetna() {
-    const [loggedIn, setLoggedIn] = React.useState(Cookies.get('loggedIn'))
-  
-  
+function Pocetna(props) {
+    const [loggedIn, setLoggedIn] = React.useState(props.isLogged)
+
     return (
       <div className="pocetna-stranica">
         <div className="hero-image">
           <div className="pocetna-tekst">
+            {props.isLogged === true ? <a>Logiran</a> : <a>Nije logiran</a>}
             <h1>E-Mobiteli</h1>
             <h2>Web Shop sa modernim mobilnim telefonima</h2>
             <Button href="uredaji" variant="dark">Pregled mobilnih telefona</Button>

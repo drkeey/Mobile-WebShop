@@ -51,24 +51,16 @@ function Kosarica() {
 }
 
 export default function NavigationBar(props) {
-    const [loggedIn, setLoggedIn] = React.useState()
     const history = useHistory();
     console.log(props.isLogged)
-
-    useEffect(async () => {
-        await setLoggedIn(props.isLogged)
-        console.log('Navigacija islogged', loggedIn)
-    }, []);
 
 
     function handleLogOut() {
         Cookies.set('token', '')
         Cookies.set('loggedIn', false)
-        setLoggedIn(false)
         console.log('logo')
         history.push("/");
     }
-
 
 
     // if (!loggedIn) return <a>Loading...</a>
@@ -81,7 +73,7 @@ export default function NavigationBar(props) {
                 <Nav className="mr-auto">
                     <Nav.Link href="/uredaji">Uređaji</Nav.Link>
                     <NavDropdown title="Profil" id="basic-nav-dropdown">
-                        {loggedIn === true ?
+                        {props.isLogged ?
                             <div>
                                 <NavDropdown.Item href="/profil">Pregled profila</NavDropdown.Item>
                                 <NavDropdown.Item href="/" onClick={handleLogOut}>Odjava</NavDropdown.Item>
