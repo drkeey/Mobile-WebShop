@@ -49,7 +49,7 @@ export default function Uredaji() {
           
         }
       };
-      xmlhttp.open("POST", "http://localhost:4000/addToKosara", true);
+      xmlhttp.open("POkojST", "http://localhost:4000/kosara/addToKosara", true);
       //xmlhttp.setRequestHeader('Content-type', 'application/json')
       if(Cookies.get('token') !== '') xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
       xmlhttp.setRequestHeader('uredajID', uredaj.id)
