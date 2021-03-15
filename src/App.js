@@ -30,11 +30,11 @@ export default function App() {
         //console.log(this.responseText, this.status)
         switch (this.status) {
           case 200: //Logiran
-            console.log(`%c App.js `, 'color: white; background-color: #2274A5', 'Logiran:', true)
+            console.log(`%c LOGIRAN `, 'color: white; background-color: #2274A5', true)
             return setLogged(true)
 
           case 204: //Nije logiran
-          console.log(`%c App.js `, 'color: white; background-color: #2274A5', 'Logiran:', false)
+          console.log(`%c LOGIRAN `, 'color: white; background-color: #2274A5', false)
           return setLogged(false)
 
           //Errori

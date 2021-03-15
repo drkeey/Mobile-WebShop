@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useHistory } from "react-router-dom";
 
 import { Container } from "react-bootstrap";
 import Jumbotron from 'react-bootstrap/Jumbotron';
@@ -20,8 +21,13 @@ export default function Kosara() {
     const [podaci, setPodaci] = React.useState({})
     const [response, setResponse] = React.useState('')
 
-    const [dostava, setDostava] = React.useState({cijena: '', value: ''})
+    const [brojMobitela, setBrojMobitela] = React.useState('')
+    const [napomena, setNampomena] = React.useState('')
+    const [dostava, setDostava] = React.useState('')
     const [nacinPlacanja, setNacinPlacanja] = React.useState('')
+
+    const history = useHistory();
+
 
 
     const handleSetUserPodaci = () => {
@@ -84,12 +90,45 @@ export default function Kosara() {
         xmlhttp.send();
     }
 
-    const changeHandler = event => {
-        setDostava(Object.assign(dostava, { [event.target.name]: event.target.value }));
-        console.log(event.target.name, event.target.value, '     ')
-      };
+    const handleNarucivanje = () => {
+        let mob = parseInt(brojMobitela)
+        console.log(mob.toString().length)
+
+        if(mob.toString().length < 10 || mob.toString().length > 12) return alert('Molimo upisite ispravan mobitela')
+
+
+        const finalni_podaci = {
+          mobitel: brojMobitela,
+          napomena: napomena,
+          dostava: dostava,
+          nacin_placanja: nacinPlacanja
+        }
+        console.log(finalni_podaci)
+
+
+        let xmlhttp = new XMLHttpRequest()
+        xmlhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                console.log(this.responseText);
+                alert('Narudžba je uspješno zaprimljena.')
+                history.push('/')
+            }if(this.status === 404){
+                return alert('Problem. Molimo provjerite podatke')
+            }
+        };
+        xmlhttp.open("POST", "http://localhost:4000/kosara/narudzba", true);
+        xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
+        xmlhttp.setRequestHeader('Content-type', 'application/json')
+        xmlhttp.send(
+            JSON.stringify(
+                finalni_podaci
+            )
+        );
+    }
 
     if (response === 'err') return <a>Nemate dozvolu za ovu stranicu.</a>
+    if (kosara_uredaji.length === 0) return <h1>Košarica je prazna</h1>
+
 
     return (
         <Container fluid>
@@ -201,6 +240,8 @@ export default function Kosara() {
                     <FormControl
                         aria-label="Mobitel"
                         aria-describedby="basic-addon1"
+                        type="number"
+                        onChange={(e) => setBrojMobitela(e.target.value)}
                     />
                 </InputGroup>
 
@@ -211,6 +252,7 @@ export default function Kosara() {
                     <FormControl
                         aria-label="Napomena_za_dostavu"
                         aria-describedby="basic-addon1"
+                        onChange={(e) => setNampomena(e.target.value)}
                     />
                 </InputGroup>
             </Jumbotron>
@@ -228,11 +270,11 @@ export default function Kosara() {
                     </Form.Group>
                     <Form.Group controlId="exampleForm.SelectCustom">
                         <Form.Label>Dostava</Form.Label>
-                        
-                        <Form.Control onChange={() => changeHandler} as="select" custom>
-                            <option cijena="30">GLS Dostava - 30,00 HRK - 3 do 5 radnih dana</option>
-                            <option cijena="50">HP Express - 50,00 HRK - 1 do 3 radna dana</option>
-                            <option cijena="0">Preuzimanje u trgovini - 0 HRK</option>
+
+                        <Form.Control onChange={(e) => setDostava(e.target.value)} as="select" custom>
+                            <option>GLS Dostava - 30,00 HRK - 3 do 5 radnih dana</option>
+                            <option>HP Express - 50,00 HRK - 1 do 3 radna dana</option>
+                            <option>Preuzimanje u trgovini - 0 HRK</option>
                         </Form.Control>
                     </Form.Group>
                 </Form>
@@ -240,16 +282,16 @@ export default function Kosara() {
             <Jumbotron style={{ textAlign: 'center' }}>
                 <h1 style={{ textAlign: 'center' }}>Finalizacija</h1>
                 <div style={{ textAlign: 'right' }}>
-                    <b>Uređaji</b>
+                    <b>Uređaji</b><br />
                     {kosara_uredaji.map(el => (
                         <div><a><b>{el.naziv} {`(${el.kolicina}X)`} - </b>{el.cijena * el.kolicina},00 HRK</a><br /></div>
                     ))}
 
                     <a>Plaćanje: <b>{`${nacinPlacanja}`}</b></a><br />
                     <a>Dostava: <b>{dostava}</b></a><br />
-                    <a>Ukupna cijena:</a> <b>{ukupnaCijena + dostava.cijena},00 HRK</b>
+                    {/* <a>Ukupna cijena:</a> <b>{ukupnaCijena + dostava.cijena},00 HRK</b> */}
                 </div>
-                <Button block variant="dark">Naruči</Button>
+                <Button onClick={() => {handleNarucivanje()}} block variant="dark">Naruči</Button>
 
             </Jumbotron>
 
