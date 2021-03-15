@@ -9,11 +9,11 @@ const middlewares = require('../middleware')
 //Rute za uredaje
 router.get('/', (req, res) => {
     console.log(db.connected)
-    if (!db.connected) return res.sendStatus(500)
+    if (!db.connected()) return res.sendStatus(500)
 
     let q = squel.select().from("uredaji")
 
-    db.connection.query(q.toString(), function (err, result, fields) {
+    db.connection().query(q.toString(), function (err, result, fields) {
         if (err) { throw err };
         console.log('Slanje svih uredaja', result)
         res.send(result)
@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
 })
 //Filtriranje uredaja
 router.post('/filter', (req, res) => {
-    if (!connected) return res.sendStatus(500)
+    if (!db.connected()) return res.sendStatus(500)
 
     let q = squel.select().from("uredaji")
     if (req.body.proizvodac !== 'Svi') q.where(`proizvodac="${req.body.proizvodac}"`)
@@ -45,7 +45,7 @@ router.post('/filter', (req, res) => {
         }
     }
 
-    db.connection.query(q.toString(), function (err, result, fields) {
+    db.connection().query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         console.log('Saljem filtrirane uređaje', result)
         res.send(result)

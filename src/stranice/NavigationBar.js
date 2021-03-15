@@ -31,39 +31,19 @@ function Kosarica() {
     // }, []);
 
     return (
-        <NavDropdown title={<FaCartPlus />} id="basic-nav-dropdown">
-            {/* {korpa.forEach(mobitel => {
-        (
-          <div>
-            <NavDropdown.Item href="#action/3.4">
-              <img src={mobitel.slikaUrl} style={{ width: '100px', height: '100px' }} alt="Avatar" />
-              <a>{mobitel.naziv}</a>
-              <b> (1 komad)</b>
-              <br /><b>{`Cijena: ${mobitel.cijena} HRK`}</b>
-            </NavDropdown.Item>
-          </div>
-        )
-      })} */}
-
-            <NavDropdown.Item href="#action/3.4" href="/kosara">Pregled košare</NavDropdown.Item>
-        </NavDropdown>
+        <Nav.Link href="#action/3.4" href="/kosara">{<FaCartPlus />}</Nav.Link>
     )
 }
 
 export default function NavigationBar(props) {
     const history = useHistory();
-    console.log(props.isLogged)
-
+    //console.log(props.isLogged)
 
     function handleLogOut() {
-        Cookies.set('token', '')
-        Cookies.set('loggedIn', false)
-        console.log('logo')
+        Cookies.remove('token')
+        Cookies.remove('loggedIn')
         history.push("/");
     }
-
-
-    // if (!loggedIn) return <a>Loading...</a>
 
     return (
         <Navbar className="navbar" bg="light" expand="lg">
@@ -83,13 +63,9 @@ export default function NavigationBar(props) {
                                 <NavDropdown.Item href="/prijava">Prijava</NavDropdown.Item>
                                 <NavDropdown.Item href="/registracija">Registracija</NavDropdown.Item>
                             </div>
-
                         }
-
-                        {/* <NavDropdown.Divider /> */}
-                        {/* <NavDropdown.Item href="/resetLozinke">Zaboravljena lozinka</NavDropdown.Item> */}
                     </NavDropdown>
-                    <Kosarica />
+                    {props.isLogged ? <Kosarica /> : null }
                 </Nav>
                 <Form inline>
 

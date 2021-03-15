@@ -2,45 +2,36 @@
 const mysql = require('mysql');
 const cors = require('cors')
 const bodyParser = require('body-parser')
-const squel = require('squel')
 const cookieParser = require('cookie-parser');
+const squel = require('squel')
 const jwt = require('jsonwebtoken');
-
-
+const db = require('./db');
 const express = require('express');
 const app = express()
 const port = 4000
-
-const db = require('./db');
 
 const profil = require('./routes/profil');
 const uredaji = require('./routes/uredaji');
 const adminPloca = require('./routes/adminPloca');
 const kosara = require('./routes/kosara');
 
-
 const middlewares = require('./middleware')
 
 const CryptoJS = require("crypto-js");
 
 
-const db_connection = db._connection
-let db_connected = db._connected
-db.connectToDB()
 
 //Middleware
 var corsOptions = {
     origin: 'http://localhost:3000',
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
-
-
 app.use(cors(corsOptions))
 app.use(cookieParser());
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }));
-
-
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json())
+app.use(express.static('./public'))
+//Rute
 app.use('/profil', profil)
 app.use('/uredaji', uredaji)
 app.use('/adminPloca', adminPloca)
@@ -48,17 +39,15 @@ app.use('/kosara', kosara)
 
 
 app.get('/checkLogin', middlewares.authMiddleware, (req, res) => {
-    console.log('Gasiram', req.user)
     if (req.loggedIn){
-        return res.status(201).send('RESPONSE: LOGIRAN')
+        return res.status(200).send('RESPONSE: LOGIRAN')
     } 
-    res.status(202).send('RESPONSE: NIJE LOGIRAN')
+    res.status(204).send('RESPONSE: NIJE LOGIRAN')
 })
 
 
 
 app.get('/podaci', middlewares.authMiddleware, (req, res) => {
-    console.log('Gasiram', req.user)
     if (!req.loggedIn) return res.send({})
     let final = {
         ime: req.user.ime,
@@ -71,39 +60,15 @@ app.get('/podaci', middlewares.authMiddleware, (req, res) => {
 })
 //Rute za korisnike
 app.get('/pocetna', middlewares.authMiddleware, (req, res) => {
-    //console.log(req.headers)
     if (req.loggedIn) res.send(`Dobrodošao/la ${req.user.korisnicko_ime} nazad!`)
 })
 
 app.get('/logout', (req, res) => {
-    let connected = db.connected
+    if(!db.connected()) return res.status(500).send('Problem sa bazom podataka.')
+    if(!req.loggedIn) return res.sendStatus(403)
 
-    console.log('hgasiram', db.connected)
-    if (!connected) {
-        res.status(500)
-        return res.send('Problem sa bazom podataka.')
-    }
-
-    const token = req.headers.authorization.replace('Bearer ', '')
-    if (req.headers.authorization === null) return res.sendStatus(404)
-
-    console.log(token)
-    try {
-        jwt.verify(token, '123', function (err, decoded) {
-            if (err) {
-                console.log('Nema tokena ili nevalja')
-                return res.sendStatus(202)
-            }
-
-
-
-        });
-
-
-    } catch (err) {
-        console.log(err)
-        res.sendStatus(202)
-    }
+    req.user = null
+    req.loggedIn = false
 })
 
 app.post('/registracija', (req, res) => {
@@ -114,7 +79,7 @@ app.post('/registracija', (req, res) => {
         function checkUsername() {
             return new Promise(resolve => {
                 let q = squel.select().from("korisnici").where(`korisnicko_ime = "${req.body.korisnicko_ime}"`)
-                db.connection.query(q.toString(), function (err, result, fields) {
+                db.connection().query(q.toString(), function (err, result, fields) {
                     if (err) throw err;
                     if (result.length > 0) return resolve(false)
 
@@ -126,7 +91,7 @@ app.post('/registracija', (req, res) => {
         function checkEmail() {
             return new Promise(resolve => {
                 let q = squel.select().from("korisnici").where(`email = "${req.body.email}"`)
-                db.connection.query(q.toString(), function (err, result, fields) {
+                db.connection().query(q.toString(), function (err, result, fields) {
                     if (err) throw err;
                     if (result.length > 0) return resolve(false)
                     resolve(true)
@@ -142,10 +107,10 @@ app.post('/registracija', (req, res) => {
         let q = squel.insert()
             .into("korisnici")
             .set("korisnicko_ime", req.body.korisnicko_ime)
-            .set("lozinka", req.body.lozinka)
+            .set("lozinka", CryptoJS.AES.encrypt(req.body.lozinka, '123').toString())
             .set("email", req.body.email)
 
-        db.connection.query(q.toString(), function (err, result, fields) {
+        db.connection().query(q.toString(), function (err, result, fields) {
             if (err) throw err;
             //console.log(result)
             console.log('Korisnik uspjesno dodan u bazu podataka')
@@ -168,7 +133,7 @@ app.post('/prijava', (req, res) => {
     //console.log('Primam prijasdasdavu',db_connection)
 
     let q = squel.select().from("korisnici").where(`korisnicko_ime="${req.body.korisnicko_ime}"`)
-    db.connection.query(q.toString(), function (err, result, fields) {
+    db.connection().query(q.toString(), function (err, result, fields) {
         if (err) return console.error(err);
         if (result.length > 0) {
             //REQ
@@ -192,5 +157,5 @@ app.post('/prijava', (req, res) => {
 
 
 app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`)
+    console.log(`Express server na http://localhost:${port}`)
 })

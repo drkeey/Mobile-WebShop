@@ -17,14 +17,11 @@ import Cookies from 'js-cookie';
 export default function Kosara() {
     const [kosara_uredaji, setKosaraUredaji] = React.useState([])
     const [ukupnaCijena, setUkupnaCijena] = React.useState(0)
-    const [dostava, setDostava] = React.useState(30)
     const [podaci, setPodaci] = React.useState({})
     const [response, setResponse] = React.useState('')
 
-
-    const [showPodaci, setShowPodaci] = React.useState(false)
-    const [showDostava, setShowDostava] = React.useState(false)
-    const [showFinalizacija, setShowFinalizacija] = React.useState(false)
+    const [dostava, setDostava] = React.useState({cijena: '', value: ''})
+    const [nacinPlacanja, setNacinPlacanja] = React.useState('')
 
 
     const handleSetUserPodaci = () => {
@@ -32,7 +29,7 @@ export default function Kosara() {
         xmlhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
                 setPodaci(JSON.parse(this.responseText))
-                console.log(podaci, ',,,,', JSON.parse(this.responseText))
+                //console.log(podaci, ',,,,', JSON.parse(this.responseText))
             }
         };
         xmlhttp.open("GET", "http://localhost:4000/podaci", true);
@@ -56,6 +53,7 @@ export default function Kosara() {
     //Get kosara uredaji
     useEffect(() => {
         handleDohvatiIzKosarice()
+        handleSetUserPodaci()
     }, []);
 
     const handleDohvatiIzKosarice = () => {
@@ -64,7 +62,7 @@ export default function Kosara() {
             if (this.readyState == 4 && this.status == 200) {
                 handleSetKosara(this.responseText)
             }
-            if(this.readyState == 4 && this.status == 403){
+            if (this.readyState == 4 && this.status == 403) {
                 setResponse('err')
             }
         };
@@ -86,7 +84,12 @@ export default function Kosara() {
         xmlhttp.send();
     }
 
-    if(response === 'err') return <a>Nemate dozvolu za ovu stranicu.</a>
+    const changeHandler = event => {
+        setDostava(Object.assign(dostava, { [event.target.name]: event.target.value }));
+        console.log(event.target.name, event.target.value, '     ')
+      };
+
+    if (response === 'err') return <a>Nemate dozvolu za ovu stranicu.</a>
 
     return (
         <Container fluid>
@@ -216,7 +219,7 @@ export default function Kosara() {
                 <Form>
                     <Form.Group controlId="exampleForm.SelectCustom">
                         <Form.Label>Način plaćanja</Form.Label>
-                        <Form.Control as="select" custom>
+                        <Form.Control onChange={(e) => setNacinPlacanja(e.target.value)} as="select" custom>
                             <option>Pouzećem</option>
                             <option>Kreditna kartica</option>
                             <option>Virman</option>
@@ -225,10 +228,11 @@ export default function Kosara() {
                     </Form.Group>
                     <Form.Group controlId="exampleForm.SelectCustom">
                         <Form.Label>Dostava</Form.Label>
-                        <Form.Control as="select" custom>
-                            <option>GLS Dostava - 29,99 HRK - 3 do 5 radnih dana</option>
-                            <option>HP Express - 49,99 HRK - 1 do 3 radna dana</option>
-                            <option>Preuzimanje u trgovini - 0 HRK</option>
+                        
+                        <Form.Control onChange={() => changeHandler} as="select" custom>
+                            <option cijena="30">GLS Dostava - 30,00 HRK - 3 do 5 radnih dana</option>
+                            <option cijena="50">HP Express - 50,00 HRK - 1 do 3 radna dana</option>
+                            <option cijena="0">Preuzimanje u trgovini - 0 HRK</option>
                         </Form.Control>
                     </Form.Group>
                 </Form>
@@ -236,13 +240,14 @@ export default function Kosara() {
             <Jumbotron style={{ textAlign: 'center' }}>
                 <h1 style={{ textAlign: 'center' }}>Finalizacija</h1>
                 <div style={{ textAlign: 'right' }}>
+                    <b>Uređaji</b>
                     {kosara_uredaji.map(el => (
                         <div><a><b>{el.naziv} {`(${el.kolicina}X)`} - </b>{el.cijena * el.kolicina},00 HRK</a><br /></div>
                     ))}
 
-                    <a>Plaćanje: <b>Pouzećem</b></a><br />
-                    <a>Dostava: <b>29,99 HRK</b></a><br />
-                    <a>Ukupna cijena:</a> <b>{ukupnaCijena + dostava},00 HRK</b>
+                    <a>Plaćanje: <b>{`${nacinPlacanja}`}</b></a><br />
+                    <a>Dostava: <b>{dostava}</b></a><br />
+                    <a>Ukupna cijena:</a> <b>{ukupnaCijena + dostava.cijena},00 HRK</b>
                 </div>
                 <Button block variant="dark">Naruči</Button>
 

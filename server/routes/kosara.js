@@ -9,25 +9,19 @@ router.use(middlewares.authMiddleware)
 //Kosarica
 router.get('/', (req, res) => {
     //uzimanje kosarice od usera i pretvaranje u array
-    //console.log('gledaj',req.user.loggedIn)
     if(!req.loggedIn) return res.sendStatus(403)
     let user_uredajiArr = req.user.kosara.split(' ').map(Number).filter(el => el !== 0)
-    console.log('Duzina', user_uredajiArr, user_uredajiArr.length)
     if(user_uredajiArr.length === 0) return res.sendStatus(200)
-
     user_uredajiArr = user_uredajiArr.map(el => parseInt(el))
-    console.log('a', user_uredajiArr)
 
     //dohvacanje mobitela za display
     let count = {};
     user_uredajiArr.forEach(function (i) { count[i] = (count[i] || 0) + 1; });
     const mobiteliUnique = Object.keys(count)
     let q_string = 'ID=' + mobiteliUnique.join(' OR ID=')
-
     let q = squel.select().from('uredaji')
     q.where(q_string)
-    console.log(q.toString())
-    db.connection.query(q.toString(), function (err, result, fields) {
+    db.connection().query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         let final = result.map(el => {
             let copy = Object.assign({}, el)
@@ -39,6 +33,8 @@ router.get('/', (req, res) => {
 })
 
 router.post('/addToKosara', (req, res) => {
+    if(!req.loggedIn) return res.sendStatus(403)
+
     let uredaj_id = req.header('uredajid')
     let kosarica = []
 
@@ -54,19 +50,21 @@ router.post('/addToKosara', (req, res) => {
     }
 
     let q = squel.update().table("korisnici").set("kosara", kosarica.join(' ')).where(`ID="${req.user.ID}"`)
-    db.connection.query(q.toString(), function (err, result, fields) {
+    db.connection().query(q.toString(), function (err, result, fields) {
         if (err) throw err;
-        console.log('uspjeh', result, fields, q.toString())
+        console.log('Uspjesno', result, fields, q.toString())
         res.send(kosarica)
     });
 })
 
 router.post('/ukloniIzKosarice', (req, res) => {
+    if(!req.loggedIn) return res.sendStatus(403)
+
     let uredaj_id = req.header('uredajid')
     if (uredaj_id === '') return res.sendStatus(404)
 
     let kosarica = req.user.kosara.split(' ').map(Number)
-    console.log(kosarica)
+    //console.log(kosarica)
     if (req.user.kosara.length === 0) {//Ako je prazna kosarica
         return res.sendStatus('404')
     }
@@ -76,12 +74,12 @@ router.post('/ukloniIzKosarice', (req, res) => {
     if (index > -1) {
         upp.splice(index, 1)
     }
-    console.log(kosarica, 'Za maknit ', uredaj_id,'index ', index, 'nakon ', upp)
+    //console.log(kosarica, 'Za maknit ', uredaj_id,'index ', index, 'nakon ', upp)
 
     let q = squel.update().table("korisnici").set("kosara", upp.join(' ')).where(`ID="${req.user.ID}"`)
-    db.connection.query(q.toString(), function (err, result, fields) {
+    db.connection().query(q.toString(), function (err, result, fields) {
         if (err) throw err;
-        console.log('uspjeh', result, fields, q.toString())
+        console.log('Uspjesno', result, fields, q.toString())
         res.send(upp)
     });
 

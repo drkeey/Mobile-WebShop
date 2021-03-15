@@ -11,34 +11,30 @@ import { Container } from "react-bootstrap";
 
 
 import Cookies from 'js-cookie';
-var jwt = require('jsonwebtoken');
 
-function AdminPloca() {
-  //const [loggedIn, setLoggedIn] = React.useState(Boolean(props.isLogged))
+export default function AdminPloca() {
+  //Response za onLoad ,ako je response === 'err' onda korisnik nema pristup stranici
   const [response, setResponse] = React.useState('')
-
-
+  //Korisnici
   const [users, setUsers] = React.useState([])
   const [oznaceni, setOznaceni] = React.useState(Array)
-
+  //Modali
   const [modalShowUredi, setModalShowUredi] = React.useState(false)
   const [modalShowUrediTip, setModalShowUrediTip] = React.useState(false)
-
+  const [modalShowDodajKorisnika, setModalShowDodajKorisnika] = React.useState(false)
+  //Korisnik za uredivanje - tip i svojstva - samo ako je jedan odabran
   const [odabraniKorisnik, setOdabraniKorisnik] = React.useState('')
-
+  //Dodaj korisnika response
+  const [responseText, setResponseText] = React.useState('')
 
   useEffect(async () => {
     let xmlhttp = new XMLHttpRequest()
     xmlhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
         let parsed = JSON.parse(this.responseText)
-        const decoded = jwt.verify(Cookies.get('token'), '123')
-        let filtered = parsed.filter(elem => elem.tip !== 0)
-        if (decoded.tip !== 0) return setUsers(filtered) //Ako je moderator u pitanju, onda saljemo sve korisnicke racune osim adminovog
         setUsers(parsed)
       }
       if (this.readyState == 4 && this.status == 403) {
-        console.log('sadasdads')
         setResponse('err')
       }
     };
@@ -64,12 +60,12 @@ function AdminPloca() {
       let copy = oznaceni.map(el => el)
       copy.push(user)
       setOznaceni(copy)
-      console.log(oznaceni, copy)
+      //console.log(oznaceni, copy)
     }
     else {
       let copy = oznaceni.filter(el => el !== user)
       setOznaceni(copy)
-      console.log(copy)
+      //console.log(copy)
     }
 
   }
@@ -88,7 +84,6 @@ function AdminPloca() {
       if (this.readyState == 4 && this.status == 200) {
         alert('Uspješno obrisano.');
         window.location.reload(false);
-
       }
     };
     xmlhttp.onerror = function (err) {
@@ -122,7 +117,7 @@ function AdminPloca() {
       console.log(korisnikUpdate)
       xmlhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-          console.log(this.responseText);
+          //console.log(this.responseText);
           setLoading(false)
           setLoginResponse(this.responseText)
         }
@@ -141,7 +136,7 @@ function AdminPloca() {
 
     const changeHandler = event => {
       setKorisnikUpdate(Object.assign(korisnikUpdate, { [event.target.name]: parseInt(event.target.value) }));
-      console.log(event.target.name, event.target.value, '     ', korisnikUpdate)
+      //console.log(event.target.name, event.target.value, '     ', korisnikUpdate)
     };
 
 
@@ -209,7 +204,6 @@ function AdminPloca() {
       </Modal>
     );
   }
-  
   function ModalUredi() {
     const [korisnik, setKorisnik] = React.useState(odabraniKorisnik)
     const [korisnikUpdate, setKorisnikUpdate] = React.useState(Object.assign({}, odabraniKorisnik))
@@ -225,7 +219,7 @@ function AdminPloca() {
       let xmlhttp = new XMLHttpRequest()
       xmlhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-          console.log(this.responseText);
+          //console.log(this.responseText);
           setLoading(false)
           setLoginResponse(this.responseText)
         }
@@ -244,7 +238,7 @@ function AdminPloca() {
 
     const changeHandler = event => {
       setKorisnikUpdate(Object.assign(korisnikUpdate, { [event.target.name]: event.target.value }));
-      console.log(event.target.name, event.target.value, '     ', korisnikUpdate)
+      //console.log(event.target.name, event.target.value, '     ', korisnikUpdate)
     };
 
 
@@ -375,43 +369,6 @@ function AdminPloca() {
       </Modal>
     );
   }
-
-
-  //Buttoni
-  function Controlls() {
-    if (oznaceni.length > 1) {
-      return (
-        <div>
-          <Button disabled block style={{ marginTop: '2rem' }} variant="outline-dark">Uredi</Button>
-          <Button disabled block style={{ marginTop: '5px' }} variant="outline-primary">Tip</Button>
-          <Button onClick={() => handler_obrisiKorisnika()} block style={{ marginTop: '5px' }} variant="danger">Obriši</Button>
-        </div>
-      )
-    }
-    if (oznaceni.length === 0) {
-      return (
-        <div>
-          <Button disabled block style={{ marginTop: '2rem' }} variant="outline-dark">Uredi</Button>
-          <Button disabled block style={{ marginTop: '5px' }} variant="outline-primary">Tip</Button>
-          <Button disabled block style={{ marginTop: '5px' }} variant="outline-danger">Obriši</Button>
-        </div>
-      )
-    }
-    else {
-      return (
-        <div>
-          <Button onClick={() => handler_urediKorisnika()} block style={{ marginTop: '2rem' }} variant="dark">Uredi</Button>
-          <Button onClick={() => handler_urediTipKorisnika()} block style={{ marginTop: '5px' }} variant="primary">Tip</Button>
-          <Button onClick={() => handler_obrisiKorisnika()} block style={{ marginTop: '5px' }} variant="danger">Obriši</Button>
-        </div>
-      )
-    }
-  }
-
-  const [showDodajKorisnika, setShowDodajKorisnika] = React.useState(false)
-  const [responseText, setResponseText] = React.useState('')
-
-  //Dodaj korisnika
   function ModalDodajKorisnika() {
     const [korisnik, setKorisnik] = React.useState({
       tip: '',
@@ -454,7 +411,7 @@ function AdminPloca() {
     const changeHandler = event => {
       let obj = Object.assign(korisnik, { [event.target.name]: event.target.value })
       setKorisnik(obj);
-      console.log(event.target.name, event.target.value, '     ', obj)
+      //console.log(event.target.name, event.target.value, '     ', obj)
     };
 
     return (
@@ -462,7 +419,7 @@ function AdminPloca() {
         size="lg"
         aria-labelledby="contained-modal-title-vcenter"
         centered
-        show={showDodajKorisnika}
+        show={modalShowDodajKorisnika}
       >
         <Modal.Header closeButton>
           <Modal.Title id="contained-modal-title-vcenter">
@@ -584,12 +541,43 @@ function AdminPloca() {
         <Modal.Footer>
           <a>{responseText}</a>
           <Button onClick={(e) => submitHandler(e)} variant="outline-dark">Dodaj</Button> <br />
-          <Button variant="outline-danger" onClick={() => setShowDodajKorisnika(false)}>Zatvori</Button>
+          <Button variant="outline-danger" onClick={() => setModalShowDodajKorisnika(false)}>Zatvori</Button>
         </Modal.Footer>
       </Modal>
     );
 
   }
+  //Buttoni
+  function Actions() {
+    if (oznaceni.length > 1) {
+      return (
+        <div>
+          <Button disabled block style={{ marginTop: '2rem' }} variant="outline-dark">Uredi</Button>
+          <Button disabled block style={{ marginTop: '5px' }} variant="outline-primary">Tip</Button>
+          <Button onClick={() => handler_obrisiKorisnika()} block style={{ marginTop: '5px' }} variant="danger">Obriši</Button>
+        </div>
+      )
+    }
+    if (oznaceni.length === 0) {
+      return (
+        <div>
+          <Button disabled block style={{ marginTop: '2rem' }} variant="outline-dark">Uredi</Button>
+          <Button disabled block style={{ marginTop: '5px' }} variant="outline-primary">Tip</Button>
+          <Button disabled block style={{ marginTop: '5px' }} variant="outline-danger">Obriši</Button>
+        </div>
+      )
+    }
+    else {
+      return (
+        <div>
+          <Button onClick={() => handler_urediKorisnika()} block style={{ marginTop: '2rem' }} variant="dark">Uredi</Button>
+          <Button onClick={() => handler_urediTipKorisnika()} block style={{ marginTop: '5px' }} variant="primary">Tip</Button>
+          <Button onClick={() => handler_obrisiKorisnika()} block style={{ marginTop: '5px' }} variant="danger">Obriši</Button>
+        </div>
+      )
+    }
+  }
+
 
   if (users === null) return <a>Učitavanje...</a>
   if (response === 'err') return <a>Nemate dozvole za ovu stranicu.</a>
@@ -598,8 +586,8 @@ function AdminPloca() {
     <Container fluid>
       <a>{response}</a>
       <h1 style={{ textAlign: 'center' }}>Admin - upravljanje sa korisnicima</h1>
-      <Button onClick={() => setShowDodajKorisnika(true)} block variant="dark">Dodaj korisnika</Button>
-      <Controlls />
+      <Button onClick={() => setModalShowDodajKorisnika(true)} block variant="dark">Dodaj korisnika</Button>
+      <Actions />
       <Table striped bordered hover style={{ maxHeight: '100vh', overflow: 'auto' }}>
         <thead>
           <tr>
@@ -646,4 +634,3 @@ function AdminPloca() {
   )
 }
 
-export default AdminPloca;

@@ -5,12 +5,11 @@ const db = require('./db')
 
 module.exports = {
     authMiddleware: (req, res, next) => {
-        console.log(db.db_connected)
-        if (!db.connected) return res.sendStatus(500)
+        console.log('connected ',db.connected())
+        if (!db.connected()) return res.status(500).send('Problem s bazom podataka.')
 
-        let db_connection = db.connection
+        let db_connection = db.connection()
 
-        console.log('hasiram')
         if (!req.headers.authorization) {
             res.sendStatus(403)
             return res.send('Potrebna autorizacija za pregled')
@@ -45,7 +44,7 @@ module.exports = {
 
             });
         } catch (err) {
-            console.log('NEVALJA TOKEN')
+            //console.log('NEVALJA TOKEN')
             req.loggedIn = false
 
             return next()

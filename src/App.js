@@ -22,79 +22,37 @@ import Prijava from "./stranice/Prijava"
 import Profil from "./stranice/Profil"
 import Kosara from "./stranice/Kosara"
 
-
-
-//Provjera sesije
-function isLoggedIn() {
-  return new Promise(resolve => {
-    let final = null
-    let xmlhttp = new XMLHttpRequest()
-    xmlhttp.onreadystatechange = function () {
-      if (this.readyState == 4) {
-        switch (this.status) {
-          case 201: //Logiran
-            console.log('pkl')
-            final = true
-            break;
-          case 202: //Nije logiran
-            console.log('pk22l')
-            final = false
-            break;
-        }
-      }
-    };
-    setInterval(() => {
-      if (final !== null) return resolve(final)
-    }, 100)
-    if (Cookies.get('token') === '') return resolve(false)
-    xmlhttp.open("GET", "http://localhost:4000/checkLogin", true);
-    xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
-    xmlhttp.send();
-  })
-
-}
-
-
 export default function App() {
   const [logged, setLogged] = React.useState(async () => {
-    let final = null
     let xmlhttp = new XMLHttpRequest()
     xmlhttp.onreadystatechange = function () {
       if (this.readyState == 4) {
-        console.log(this.responseText, this.status)
+        //console.log(this.responseText, this.status)
         switch (this.status) {
-          case 201: //Logiran
-            console.log('pkl')
-            final = true
+          case 200: //Logiran
+            console.log(`%c App.js `, 'color: white; background-color: #2274A5', 'Logiran:', true)
             return setLogged(true)
-            break;
-          case 202: //Nije logiran
-            console.log('pk22l')
-            final = false
-            return setLogged(false)
-            break;
+
+          case 204: //Nije logiran
+          console.log(`%c App.js `, 'color: white; background-color: #2274A5', 'Logiran:', false)
+          return setLogged(false)
+
+          //Errori
+          case 500: //Problem sa bazom
+            return setLogged(this.responseText)
+
         }
       }
     };
-
-    // let int = setInterval(() => {
-    //   //if (final !== null) return resolve(final)
-    //   if (final !== null){
-    //     console.log('LOGIRAN:', final)
-    //     setLogged(final)
-    //     return clearInterval(int)
-    //   } 
-    //  // if (Cookies.get('token') === '') setLogged(false)
-    // }, 100)
-
     xmlhttp.open("GET", "http://localhost:4000/checkLogin", true);
     xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
     xmlhttp.send();
   })
 
+  if (typeof logged === 'string') return <a>Problem s bazom podataka</a>
+  if (typeof logged !== 'boolean') return <a>Učitavanje...</a>
 
-  if (typeof logged !== 'boolean') return <a>Loading...</a>
-  console.log(typeof logged, logged)
+
   return (
     <Router>
       <div className="App">
@@ -123,7 +81,6 @@ export default function App() {
             </Route>
             <Route path="/adminPloca">
               {Boolean(logged) === true ? <AdminPloca /> : <Redirect to="/" />}
-              <AdminPloca />
             </Route>
             <Route path="/">
               <Pocetna isLogged={Boolean(logged)} />

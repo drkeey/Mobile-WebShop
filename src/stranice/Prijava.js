@@ -39,10 +39,8 @@ export default function Prijava() {
           setLoading(false)
           let token = this.responseText.replaceAll(`"`, '')
           Cookies.set('token', token)
-          Cookies.set('loggedIn', true)
-          return <Redirect to="/" />
-          
-  
+          alert('Uspješno logiran')
+          return history.push('/')
         }
         switch (this.status) {
           case 404:

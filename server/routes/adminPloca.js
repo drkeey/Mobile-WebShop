@@ -10,7 +10,7 @@ router.use(middlewares.authMiddleware)
 
 //Admin i moderator stvari
 router.get('/', (req, res) => {
-    if (!db.connected) return res.sendStatus(500)
+    if (req.loggedIn === false) return res.status(403).send('Zabranjen pristup.')
 
     const dopusteni_tipovi = [0, 1] //Tipovi koji smiju upravljati ovom rutom - admin i moderator
     const dopusten = dopusteni_tipovi.some(elem => elem === req.user.tip)
@@ -18,10 +18,9 @@ router.get('/', (req, res) => {
 
     //Slanje svih korisnika superuseru
     let q = squel.select().from("korisnici")
-    db.connection.query(q.toString(), function (err, result, fields) {
+    db.connection().query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         if (result.length > 0) {
-            //console.log('asdasdsdasad', result)
             return res.json(result)
         }
         res.sendStatus(404)
@@ -29,26 +28,27 @@ router.get('/', (req, res) => {
 })
 
 router.post('/uredi', (req, res) => {
-    if (!db.connected) return res.sendStatus(500)
-    //console.log(req.body)
+    if (req.loggedIn === false) return res.status(403).send('Zabranjen pristup.')
+
     const korisnik_za_update = req.body
-    const superuser = req.user
     //console.log(korisnik_za_update)
     switch (req.user.tip) { //Dopustenja i restrikcije po tipu korisnika superusera
         case 0: //Admin
-            console.log('Gazimo')
+            console.log('Sve')
             break;
         case 1: //Moderator
             //Zastita admin acca
-            if (korisnik_za_update.tip === 0) return res.sendStatus(403)
+            if (korisnik_za_update.tip === 0) return res.status(403).send('Nije moguće urediti admin korisnika')
             break;
+        default: //Ostalo
+            return res.status(403).send('Nemate dozvolu za uredivanje.')
     }
 
     let q = squel.select()
         .from("korisnici")
         .where(`ID="${korisnik_za_update.ID}"`)
         .toString()
-    db.connection.query(q.toString(), function (err, result, fields) {
+    db.connection().query(q.toString(), function (err, result, fields) {
         if (err) throw err;
         let q = squel.update()
             .table("korisnici")
@@ -72,15 +72,14 @@ router.post('/uredi', (req, res) => {
             res.status(200)
             res.send('Podaci su ažurirani')
         });
-
-        //res.sendStatus(200)
     });
 
 
 })
 
 router.post('/urediTip', (req, res) => {
-    if (!db.connected) return res.sendStatus(500)
+    if (req.loggedIn === false) return res.status(403).send('Zabranjen pristup.')
+
     //console.log(req.body)
     const korisnik_za_update = req.body
     switch (req.user.tip) { //Dopustenja i restrikcije po tipu korisnika superusera
@@ -88,15 +87,17 @@ router.post('/urediTip', (req, res) => {
             console.log('Gazimo')
             break;
         case 1: //Moderator
-            if (korisnik_za_update.tip === 0) return res.sendStatus(403)//Zastita admin acca
+            if (korisnik_za_update.tip === 0) return res.status(403).send('Nije moguće urediti admin korisnika')
             break;
+        default: //Ostalo
+            return res.status(403).send('Nemate dozvolu za uredivanje.')
     }
 
     let q = squel.select()
         .from("korisnici")
         .where(`ID="${korisnik_za_update.korisnicko_ime}"`)
         .toString()
-    db.connection.query(q.toString(), function (err, pronadeniUser, fields) {
+    db.connection().query(q.toString(), function (err, pronadeniUser, fields) {
         if (err) throw err;
         console.log('pronadeni user', pronadeniUser)
         let q = squel.update()
@@ -123,7 +124,8 @@ router.post('/urediTip', (req, res) => {
 })
 
 router.post('/obrisi', (req, res) => {
-    if (!db.connected) return res.sendStatus(500)
+    if (req.loggedIn === false) return res.status(403).send('Zabranjen pristup.')
+
     //console.log(req.body)
     const korisnici_za_obrisatID = req.body
     switch (req.user.tip) { //Dopustenja i restrikcije po tipu request korisnika
@@ -132,11 +134,12 @@ router.post('/obrisi', (req, res) => {
             break;
         case 1: //Moderator
             if (korisnici_za_obrisatID.some(el => el === 0)) {
-                res.status(404)
-                return res.send('Nije moguće obrisati administratora.')
+                return res.status(404).send('Nije moguće obrisati administratora.')
             }
             //if (korisnik_za_obrisat.tip === 0) return res.sendStatus(403)//Zastita admin acca
             break;
+        default: //Ostalo
+            return res.status(403).send('Nemate dozvolu za brisanje.')
     }
 
 
@@ -149,7 +152,7 @@ router.post('/obrisi', (req, res) => {
     )
     q.toString()
 
-    db.connection.query(q.toString(), function (err, result, fields) {
+    db.connection().query(q.toString(), function (err, result, fields) {
         console.log(q.toString())
         if (err) {
             console.log(err)
@@ -167,7 +170,19 @@ router.post('/obrisi', (req, res) => {
 })
 
 router.post('/dodajKorisnika', (req, res) => {
-    if (!db.connected) return res.sendStatus(500)
+    if (req.loggedIn === false) return res.status(403).send('Zabranjen pristup.')
+
+    switch (req.user.tip) { //Dopustenja i restrikcije po tipu korisnika superusera
+        case 0: //Admin
+            console.log('Sve')
+            break;
+        case 1: //Moderator
+            //Zastita admin acca
+            if(req.body.tip === 0) return res.status(403).send('Nemoguce dodati admin racun')
+            break;
+        default: //Ostalo
+            return res.status(403).send('Nemate dozvolu za uredivanje.')
+    }
 
     const novi_korisnik = req.body
     console.log(novi_korisnik)
@@ -176,11 +191,12 @@ router.post('/dodajKorisnika', (req, res) => {
         if (value === '') return res.send('Molimo popunite sve podatke')
     }
 
+    //Provjeravamo dali postoje konflikti, ako ih nema ubacujemo novog korisnika
     async function provjera(next) {
         function checkUsername() {
             return new Promise(resolve => {
                 let q = squel.select().from("korisnici").where(`korisnicko_ime = "${req.body.korisnicko_ime}"`)
-                db.connection.query(q.toString(), function (err, result, fields) {
+                db.connection().query(q.toString(), function (err, result, fields) {
                     if (err) throw err;
                     if (result.length > 0) return resolve(false)
 
@@ -192,7 +208,7 @@ router.post('/dodajKorisnika', (req, res) => {
         function checkEmail() {
             return new Promise(resolve => {
                 let q = squel.select().from("korisnici").where(`email = "${req.body.email}"`)
-                db.connection.query(q.toString(), function (err, result, fields) {
+                db.connection().query(q.toString(), function (err, result, fields) {
                     if (err) throw err;
                     if (result.length > 0) return resolve(false)
                     resolve(true)
@@ -207,7 +223,6 @@ router.post('/dodajKorisnika', (req, res) => {
         if (req.body.tip === 0) return res.send('Nije moguće postaviti tip 0')
         next()
     }
-    //Provjeravamo dali postoje konflikti, ako ih nema ubacujemo novog korisnika
     provjera(function () {
         let q = squel.insert()
             .into("korisnici")
@@ -222,7 +237,7 @@ router.post('/dodajKorisnika', (req, res) => {
             .set("postanski_broj", req.body.postanski_broj)
 
 
-        db.connection.query(q.toString(), function (err, result, fields) {
+        db.connection().query(q.toString(), function (err, result, fields) {
             if (err) res.send('Problem prilikom dodavanja korisnika.');
             //console.log(result)
             console.log('Korisnik uspjesno dodan u bazu podataka')
