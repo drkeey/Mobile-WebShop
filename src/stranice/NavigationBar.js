@@ -11,29 +11,6 @@ import Form from 'react-bootstrap/Form';
 
 import Cookies from 'js-cookie';
 
-function Kosarica() {
-    const [kosara, addToKosara] = React.useState()
-    // const handleSetKorpa = (itemi) => {
-    //   console.log('halooo')
-    //   let found = mobiteli.map()
-    //   setKorpa(itemi)
-    // }
-    // useEffect(() => {
-    //   localStorage.setItem('kosarica', JSON.stringify([0]))
-    //   console.log('b', localStorage.getItem('kosarica'))
-    //   // Run! Like go get some data from an API.
-    //   let timer = setInterval(() => {
-    //     console.log('a', localStorage.getItem('kosarica'))
-    //     let parsed = localStorage.getItem('kosarica')
-    //     if (parsed) return handleSetKorpa(parsed)
-
-    //   }, 1000)
-    // }, []);
-
-    return (
-        <Nav.Link href="#action/3.4" href="/kosara">{<FaCartPlus />}</Nav.Link>
-    )
-}
 
 export default function NavigationBar(props) {
     const history = useHistory();
@@ -65,7 +42,7 @@ export default function NavigationBar(props) {
                             </div>
                         }
                     </NavDropdown>
-                    {props.isLogged ? <Kosarica /> : null }
+                    {props.isLogged ? <Nav.Link href="/kosara">{<FaCartPlus />}</Nav.Link> : null }
                 </Nav>
                 <Form inline>
 

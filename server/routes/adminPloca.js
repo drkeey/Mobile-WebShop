@@ -29,12 +29,11 @@ router.get('/', (req, res) => {
 
 router.post('/uredi', (req, res) => {
     if (req.loggedIn === false) return res.status(403).send('Zabranjen pristup.')
-
+    console.log(req.body)
     const korisnik_za_update = req.body
     //console.log(korisnik_za_update)
-    switch (req.user.tip) { //Dopustenja i restrikcije po tipu korisnika superusera
+    switch (req.user.tip) { //Dopustenja i restrikcije po tipu korisnika
         case 0: //Admin
-            console.log('Sve')
             break;
         case 1: //Moderator
             //Zastita admin acca
@@ -62,7 +61,7 @@ router.post('/uredi', (req, res) => {
         result.postanski_broj !== korisnik_za_update.postanski_broj ? q.set("postanski_broj", korisnik_za_update.postanski_broj) : null
         q.where(`ID="${korisnik_za_update.ID}"`)
         q.toString()
-        db.connection.query(q.toString(), function (err, result, fields) {
+        db.connection().query(q.toString(), function (err, result, fields) {
             if (err) {
                 console.log('Neuspješno uredivanje korisnika')
                 res.status(404)
@@ -105,7 +104,7 @@ router.post('/urediTip', (req, res) => {
         pronadeniUser.tip !== korisnik_za_update.tip ? q.set("tip", korisnik_za_update.tip) : null
         q.where(`ID="${korisnik_za_update.ID}"`)
         q.toString()
-        db.connection.query(q.toString(), function (err, result, fields) {
+        db.connection().query(q.toString(), function (err, result, fields) {
             console.log(q.toString())
             if (err) {
                 console.log('Neuspješno uredivanje korisnika')
@@ -130,7 +129,6 @@ router.post('/obrisi', (req, res) => {
     const korisnici_za_obrisatID = req.body
     switch (req.user.tip) { //Dopustenja i restrikcije po tipu request korisnika
         case 0: //Admin
-            console.log('Gazimo')
             break;
         case 1: //Moderator
             if (korisnici_za_obrisatID.some(el => el === 0)) {

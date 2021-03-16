@@ -8,9 +8,9 @@ import Spinner from 'react-bootstrap/Spinner';
 import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
 import { Container } from "react-bootstrap";
-
-
 import Cookies from 'js-cookie';
+
+const CryptoJS = require("crypto-js");
 
 export default function AdminPloca() {
   //Response za onLoad ,ako je response === 'err' onda korisnik nema pristup stranici
@@ -56,6 +56,7 @@ export default function AdminPloca() {
   }
 
   const handleCheckBox = (event, user) => {
+    console.log(oznaceni)
     if (event.currentTarget.checked) {
       let copy = oznaceni.map(el => el)
       copy.push(user)
@@ -92,7 +93,7 @@ export default function AdminPloca() {
     xmlhttp.open("POST", "http://localhost:4000/adminPloca/obrisi", true);
     xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
     xmlhttp.setRequestHeader('Content-type', 'application/json')
-    console.log(korisnici_za_obrisat)
+    //console.log(korisnici_za_obrisat)
     xmlhttp.send(
       JSON.stringify(
         korisnici_za_obrisat
@@ -114,7 +115,7 @@ export default function AdminPloca() {
       setLoading(true)
       //Prijava
       let xmlhttp = new XMLHttpRequest()
-      console.log(korisnikUpdate)
+      //console.log(korisnikUpdate)
       xmlhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           //console.log(this.responseText);
@@ -211,11 +212,17 @@ export default function AdminPloca() {
     const [loading, setLoading] = React.useState(false)
     const [loginResponse, setLoginResponse] = React.useState()
 
+
+
+
     const submitHandler = event => {
       event.preventDefault();
       event.target.className += " was-validated";
       setLoading(true)
-      //Prijava
+      let object = Object.assign({}, korisnikUpdate)
+      if(korisnik.lozinka !== korisnikUpdate.lozinka)  object.lozinka = CryptoJS.AES.encrypt(object.lozinka, '123').toString()
+       
+    
       let xmlhttp = new XMLHttpRequest()
       xmlhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
@@ -229,7 +236,7 @@ export default function AdminPloca() {
       xmlhttp.setRequestHeader('Content-type', 'application/json')
       xmlhttp.send(
         JSON.stringify(
-          korisnikUpdate
+          object
         )
       );
     };
@@ -394,7 +401,7 @@ export default function AdminPloca() {
       let xmlhttp = new XMLHttpRequest()
       xmlhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-          console.log(this.responseText);
+          //console.log(this.responseText);
           setResponseText(this.responseText)
         }
       };

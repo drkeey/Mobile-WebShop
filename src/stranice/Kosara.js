@@ -23,8 +23,8 @@ export default function Kosara() {
 
     const [brojMobitela, setBrojMobitela] = React.useState('')
     const [napomena, setNampomena] = React.useState('')
-    const [dostava, setDostava] = React.useState('')
-    const [nacinPlacanja, setNacinPlacanja] = React.useState('')
+    const [dostava, setDostava] = React.useState('GLS Dostava - 30,00 HRK - 3 do 5 radnih dana')
+    const [nacinPlacanja, setNacinPlacanja] = React.useState('Pouzećem')
 
     const history = useHistory();
 
@@ -92,9 +92,9 @@ export default function Kosara() {
 
     const handleNarucivanje = () => {
         let mob = parseInt(brojMobitela)
-        console.log(mob.toString().length)
+        //console.log(mob.toString().length)
 
-        if(mob.toString().length < 10 || mob.toString().length > 12) return alert('Molimo upisite ispravan mobitela')
+        if(mob.toString().length < 9 || mob.toString().length > 12) return alert('Molimo upisite ispravan mobitela')
 
 
         const finalni_podaci = {
@@ -103,13 +103,13 @@ export default function Kosara() {
           dostava: dostava,
           nacin_placanja: nacinPlacanja
         }
-        console.log(finalni_podaci)
+        //console.log(finalni_podaci)
 
 
         let xmlhttp = new XMLHttpRequest()
         xmlhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                console.log(this.responseText);
+                //console.log(this.responseText);
                 alert('Narudžba je uspješno zaprimljena.')
                 history.push('/')
             }if(this.status === 404){
@@ -286,7 +286,6 @@ export default function Kosara() {
                     {kosara_uredaji.map(el => (
                         <div><a><b>{el.naziv} {`(${el.kolicina}X)`} - </b>{el.cijena * el.kolicina},00 HRK</a><br /></div>
                     ))}
-
                     <a>Plaćanje: <b>{`${nacinPlacanja}`}</b></a><br />
                     <a>Dostava: <b>{dostava}</b></a><br />
                     {/* <a>Ukupna cijena:</a> <b>{ukupnaCijena + dostava.cijena},00 HRK</b> */}

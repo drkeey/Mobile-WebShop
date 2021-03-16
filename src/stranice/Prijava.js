@@ -29,12 +29,12 @@ export default function Prijava() {
       event.target.className += " was-validated";
   
       setLoading(true)
-      console.log(podaci, event.target)
+      //console.log(podaci, event.target)
       //Prijava
       let xmlhttp = new XMLHttpRequest()
       xmlhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-          console.log(this.responseText);
+          //console.log(this.responseText);
           setLoginResponse(this.responseText)
           setLoading(false)
           let token = this.responseText.replaceAll(`"`, '')
@@ -51,7 +51,7 @@ export default function Prijava() {
       };
       xmlhttp.open("POST", "http://localhost:4000/prijava", true);
       xmlhttp.setRequestHeader('Content-type', 'application/json')
-      console.log(podaci)
+      //console.log(podaci)
       xmlhttp.send(
         JSON.stringify(
           {
@@ -64,7 +64,7 @@ export default function Prijava() {
   
     const changeHandler = event => {
       setPodaci(Object.assign(podaci, { [event.target.name]: event.target.value }));
-      console.log(event.target.name, event.target.value, '     ', podaci)
+      //console.log(event.target.name, event.target.value, '     ', podaci)
     };
   
     return (

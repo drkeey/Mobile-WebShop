@@ -39,9 +39,9 @@ app.use('/kosara', kosara)
 
 
 app.get('/checkLogin', middlewares.authMiddleware, (req, res) => {
-    if (req.loggedIn){
+    if (req.loggedIn) {
         return res.status(200).send('RESPONSE: LOGIRAN')
-    } 
+    }
     res.status(204).send('RESPONSE: NIJE LOGIRAN')
 })
 
@@ -64,8 +64,8 @@ app.get('/pocetna', middlewares.authMiddleware, (req, res) => {
 })
 
 app.get('/logout', (req, res) => {
-    if(!db.connected()) return res.status(500).send('Problem sa bazom podataka.')
-    if(!req.loggedIn) return res.sendStatus(403)
+    if (!db.connected()) return res.status(500).send('Problem sa bazom podataka.')
+    if (!req.loggedIn) return res.sendStatus(403)
 
     req.user = null
     req.loggedIn = false

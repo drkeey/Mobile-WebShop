@@ -7,6 +7,7 @@ import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
 import { Container } from "react-bootstrap";
 
+const CryptoJS = require("crypto-js");
 
 
 export default function Registracija() {
@@ -22,14 +23,18 @@ export default function Registracija() {
     const submitHandler = event => {
       event.preventDefault();
       event.target.className += " was-validated";
-  
+
       setLoading(true)
-      console.log(podaci, event.target)
+      //console.log(podaci, event.target)
       //Registracija
+      
+      let podaci_clone = Object.assign({}, podaci)
+      podaci_clone.lozinka = CryptoJS.AES.encrypt(podaci.lozinka, '123').toString()
+
       let xmlhttp = new XMLHttpRequest()
       xmlhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-          console.log(this.responseText);
+          //console.log(this.responseText);
           setLoading(false)
           return setRegisterResponse(this.responseText)
         }
@@ -38,10 +43,10 @@ export default function Registracija() {
       };
       xmlhttp.open("POST", "http://localhost:4000/registracija", true);
       xmlhttp.setRequestHeader('Content-type', 'application/json')
-      console.log(podaci)
+      //console.log(podaci)
       xmlhttp.send(
         JSON.stringify(
-          podaci
+          podaci_clone
         )
       );
     };
@@ -49,7 +54,7 @@ export default function Registracija() {
     const changeHandler = event => {
       event.target.value = event.key
       setPodaci(Object.assign(podaci, { [event.target.name]: event.target.value }));
-      console.log(event.target.name, event.target.value, '     ', podaci)
+      //console.log(event.target.name, event.target.value, '     ', podaci)
     };
   
     return (

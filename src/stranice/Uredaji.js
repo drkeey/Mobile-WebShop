@@ -51,7 +51,7 @@ export default function Uredaji() {
     xmlhttp.open("POST", "http://localhost:4000/kosara/addToKosara", true);
     xmlhttp.setRequestHeader(`Authorization`, `Bearer ${Cookies.get('token')}`)
     xmlhttp.setRequestHeader('uredajID', uredaj.id)
-    console.log('saljem', uredaj.id)
+    //console.log('saljem', uredaj.id)
     xmlhttp.send();
   }
 

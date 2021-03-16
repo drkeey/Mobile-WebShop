@@ -34,7 +34,7 @@ export default function Profil(props) {
 
     let formdata = new FormData()
     formdata.append('profilna', img)
-    console.log(formdata)
+    //console.log(formdata)
     let xmlhttp = new XMLHttpRequest()
     xmlhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
@@ -55,7 +55,7 @@ export default function Profil(props) {
     let xmlhttp = new XMLHttpRequest()
     xmlhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
-        console.log(this.response)
+        //console.log(this.response)
         setFileProfilna(this.responseText)
       }
     };
@@ -114,7 +114,7 @@ export default function Profil(props) {
   }
   const changeHandler = event => {
     setData(Object.assign(data, { [event.target.name]: event.target.value }));
-    console.log(event.target.name, event.target.value, '     ', data)
+    //console.log(event.target.name, event.target.value, '     ', data)
   };
 
   if (!data) return <a>Loading...</a>
